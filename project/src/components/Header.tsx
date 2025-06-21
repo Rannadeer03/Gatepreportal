@@ -113,33 +113,18 @@ export const Header: React.FC = () => {
             {isAuthenticated && (
               <>
                 {getNavLinks().map((link) => (
-                  link.onClick ? (
-                    <button
-                      key={link.to + link.text}
-                      onClick={link.onClick}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
-                        ${link.active 
-                          ? 'bg-indigo-50 text-indigo-700' 
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }`}
-                    >
-                      {link.icon}
-                      <span>{link.text}</span>
-                    </button>
-                  ) : (
-                    <Link
-                      key={link.to + link.text}
-                      to={link.to}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
-                        ${link.active 
-                          ? 'bg-indigo-50 text-indigo-700' 
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }`}
-                    >
-                      {link.icon}
-                      <span>{link.text}</span>
-                    </Link>
-                  )
+                  <Link
+                    key={link.to + link.text}
+                    to={link.to}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                      ${link.active 
+                        ? 'bg-indigo-50 text-indigo-700' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                  >
+                    {link.icon}
+                    <span>{link.text}</span>
+                  </Link>
                 ))}
 
                 {/* Notifications */}
@@ -269,28 +254,6 @@ export const Header: React.FC = () => {
               </>
             )}
 
-            {!isAuthenticated && !isLoginPage && (
-              <>
-                <Link
-                  to="/about"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  About
-                </Link>
-                <Link
-                  to="/contact"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Contact
-                </Link>
-                <Link
-                  to="/login"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-                >
-                  Login
-                </Link>
-              </>
-            )}
           </nav>
 
           {/* Mobile menu button */}
@@ -318,37 +281,18 @@ export const Header: React.FC = () => {
             {isAuthenticated ? (
               <>
                 {getNavLinks().map((link) => (
-                  link.onClick ? (
-                    <button
-                      key={link.to + link.text}
-                      onClick={() => {
-                        link.onClick?.();
-                        setIsMenuOpen(false);
-                      }}
-                      className={`flex w-full items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                        link.active
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      {link.icon}
-                      <span>{link.text}</span>
-                    </button>
-                  ) : (
-                    <Link
-                      key={link.to + link.text}
-                      to={link.to}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                        link.active
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {link.icon}
-                      <span>{link.text}</span>
-                    </Link>
-                  )
+                  <Link
+                    key={link.to + link.text}
+                    to={link.to}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
+                      link.active
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    {link.icon}
+                    <span>{link.text}</span>
+                  </Link>
                 ))}
                 <button
                   onClick={handleLogout}

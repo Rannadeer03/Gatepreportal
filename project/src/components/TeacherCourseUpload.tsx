@@ -2,6 +2,7 @@ import { Download, Eye, FileText, Trash } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import type { CourseMaterial, Subject } from '../services/api';
 import { api } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const TeacherCourseUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -14,6 +15,7 @@ const TeacherCourseUpload: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
+  const navigate = useNavigate();
 
   // Initialize subjects and materials
   useEffect(() => {
@@ -184,6 +186,16 @@ const TeacherCourseUpload: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/teacher-dashboard')}
+        className="flex items-center mb-6 text-gray-600 hover:text-gray-900 transition-colors"
+        aria-label="Back to Dashboard"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left h-6 w-6 text-gray-600"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        <span className="ml-2">Back to Dashboard</span>
+      </button>
+
       {/* Upload Form */}
       <div className="p-6 bg-white rounded-lg shadow-md mb-8">
         <h2 className="text-2xl font-bold mb-4">Upload Course Material</h2>

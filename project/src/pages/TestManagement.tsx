@@ -5,6 +5,7 @@ import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { useToast } from '../components/ui/use-toast';
 import { CreateTestButton } from '../components/CreateTestButton';
+import { useNavigate } from 'react-router-dom';
 
 interface Test {
   id: string;
@@ -88,6 +89,7 @@ export default function TestManagement() {
     target_hard: 0.0
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('TestManagement useEffect running');
@@ -362,6 +364,16 @@ export default function TestManagement() {
 
   return (
     <div className="container mx-auto p-6">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/teacher-dashboard')}
+        className="flex items-center mb-6 text-gray-600 hover:text-gray-900 transition-colors"
+        aria-label="Back to Dashboard"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left h-6 w-6 text-gray-600"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        <span className="ml-2">Back to Dashboard</span>
+      </button>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Test Management</h1>
         <CreateTestButton />
