@@ -17,11 +17,6 @@ interface QuestionFormData {
   difficulty_level: 'easy' | 'medium' | 'hard';
 }
 
-interface Participant {
-  email: string;
-  name: string;
-}
-
 interface TestSchedule {
   isScheduled: boolean;
   scheduledDate: string;
@@ -52,7 +47,6 @@ const CreateTestPage: React.FC = () => {
     difficulty_level: 'medium'
   });
   const [error, setError] = useState<string | null>(null);
-  const [participants, setParticipants] = useState<Participant[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subjects = [
@@ -280,7 +274,6 @@ const CreateTestPage: React.FC = () => {
         duration: parseInt(duration),
         teacher_id: user.id,
         is_active: true,
-        participants: participants.map(p => p.email),
         is_scheduled: testSchedule.isScheduled,
         scheduled_date: testSchedule.scheduledDate || null,
         scheduled_time: testSchedule.scheduledTime || null,
@@ -338,18 +331,6 @@ const CreateTestPage: React.FC = () => {
       setError(error instanceof Error ? error.message : 'An error occurred while creating the test');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleAddParticipant = (email: string) => {
-    if (email && !participants.some(p => p.email === email)) {
-      setParticipants([
-        ...participants,
-        { 
-          email,
-          name: Math.random().toString(36).substr(2, 9)
-        }
-      ]);
     }
   };
 
@@ -547,83 +528,6 @@ const CreateTestPage: React.FC = () => {
                   </div>
                 </>
               )}
-            </div>
-          </div>
-
-          {/* Participant Management */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Participant Management</h2>
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="participant-email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Add Participant
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    id="participant-email"
-                    type="email"
-                    placeholder="Enter participant email"
-                    className="flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const input = e.currentTarget;
-                        handleAddParticipant(input.value);
-                        input.value = '';
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      const input = document.getElementById('participant-email') as HTMLInputElement;
-                      handleAddParticipant(input.value);
-                      input.value = '';
-                    }}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Current Participants ({participants.length})
-                  </label>
-                  {participants.length > 0 && (
-                    <button
-                      onClick={() => setParticipants([])}
-                      className="text-sm text-red-600 hover:text-red-700"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-                <div className="border rounded-md max-h-48 overflow-y-auto">
-                  {participants.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500 text-sm">
-                      No participants added yet
-                    </div>
-                  ) : (
-                    <ul className="divide-y divide-gray-200">
-                      {participants.map((participant) => (
-                        <li key={participant.name} className="flex justify-between items-center p-3 hover:bg-gray-50">
-                          <span className="text-sm text-gray-700">{participant.email}</span>
-                          <button
-                            onClick={() => {
-                              setParticipants(participants.filter(p => p.name !== participant.name));
-                            }}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
 

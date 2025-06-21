@@ -22,6 +22,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { Profile } from './pages/Profile';
 import TestManagement from './pages/TestManagement';
 import TakeTestPage from './pages/TakeTestPage';
+import TestResults from './pages/TestResults';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -64,6 +65,7 @@ const App: React.FC = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/teacher/test-results" element={<TestResults />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

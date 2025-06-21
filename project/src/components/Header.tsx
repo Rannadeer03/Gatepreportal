@@ -78,10 +78,10 @@ export const Header: React.FC = () => {
           active: location.pathname === '/manage-tests'
         },
         { 
-          to: '/results', 
+          to: '/teacher/test-results', 
           icon: <BarChart2 className="h-5 w-5" />, 
           text: 'Results',
-          active: location.pathname === '/results'
+          active: location.pathname === '/teacher/test-results'
         }
       ];
     }
@@ -113,18 +113,48 @@ export const Header: React.FC = () => {
             {isAuthenticated && (
               <>
                 {getNavLinks().map((link) => (
-                  <Link
-                    key={link.to + link.text}
-                    to={link.to}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
-                      ${link.active 
-                        ? 'bg-indigo-50 text-indigo-700' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                  >
-                    {link.icon}
-                    <span>{link.text}</span>
-                  </Link>
+                  link.text === 'Results' ? (
+                    <button
+                      key={link.to + link.text}
+                      onClick={() => navigate('/teacher/test-results')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                        ${location.pathname === '/teacher/test-results' 
+                          ? 'bg-indigo-50 text-indigo-700' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {link.icon}
+                      <span>{link.text}</span>
+                    </button>
+                  ) : link.text === 'Manage Tests' ? (
+                    <button
+                      key={link.to + link.text}
+                      onClick={() => navigate('/teacher/test-management')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                        ${location.pathname === '/teacher/test-management' 
+                          ? 'bg-indigo-50 text-indigo-700' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {link.icon}
+                      <span>{link.text}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.to + link.text}
+                      to={link.to}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                        ${link.active 
+                          ? 'bg-indigo-50 text-indigo-700' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                    >
+                      {link.icon}
+                      <span>{link.text}</span>
+                    </Link>
+                  )
                 ))}
 
                 {/* Notifications */}
@@ -281,18 +311,37 @@ export const Header: React.FC = () => {
             {isAuthenticated ? (
               <>
                 {getNavLinks().map((link) => (
-                  <Link
-                    key={link.to + link.text}
-                    to={link.to}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                      link.active
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    {link.icon}
-                    <span>{link.text}</span>
-                  </Link>
+                  link.text === 'Results' ? (
+                    <button
+                      key={link.to + link.text}
+                      onClick={() => { navigate('/teacher/test-results'); setIsMenuOpen(false); }}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/teacher/test-results' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {link.icon}
+                      <span>{link.text}</span>
+                    </button>
+                  ) : link.text === 'Manage Tests' ? (
+                    <button
+                      key={link.to + link.text}
+                      onClick={() => { navigate('/teacher/test-management'); setIsMenuOpen(false); }}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/teacher/test-management' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {link.icon}
+                      <span>{link.text}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.to + link.text}
+                      to={link.to}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${link.active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.icon}
+                      <span>{link.text}</span>
+                    </Link>
+                  )
                 ))}
                 <button
                   onClick={handleLogout}

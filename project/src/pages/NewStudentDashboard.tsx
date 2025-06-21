@@ -25,6 +25,9 @@ interface Test {
   duration: number;
   teacher_id: string;
   created_at: string;
+  is_scheduled: boolean;
+  access_window_start: string | null;
+  access_window_end: string | null;
 }
 
 interface Subject {
@@ -78,6 +81,16 @@ export const NewStudentDashboard: React.FC = () => {
     }
   };
 
+  const isTestAvailableNow = (test: any) => {
+    if (!test.is_scheduled) return true;
+    const now = new Date();
+    const start = test.access_window_start ? new Date(test.access_window_start) : null;
+    const end = test.access_window_end ? new Date(test.access_window_end) : null;
+    if (start && now < start) return false;
+    if (end && now > end) return false;
+    return true;
+  };
+
   const fetchAvailableTests = async () => {
     try {
       const { data: tests, error } = await supabase
@@ -88,8 +101,10 @@ export const NewStudentDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      // Filter out completed tests
-      const filteredTests = tests?.filter(test => !completedTestIds.includes(test.id)) || [];
+      // Filter out completed tests and those not in access window
+      const filteredTests = (tests?.filter(test =>
+        !completedTestIds.includes(test.id) && isTestAvailableNow(test)
+      )) || [];
       setAvailableTests(filteredTests);
     } catch (error) {
       console.error('Error fetching available tests:', error);

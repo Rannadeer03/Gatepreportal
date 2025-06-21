@@ -114,15 +114,6 @@ export default function TestManagement() {
           console.error('Error loading tests:', error);
           throw new Error('Failed to load tests');
         }
-
-        try {
-          await fetchResults();
-          console.log('Results loaded successfully');
-        } catch (error) {
-          console.error('Error loading results:', error);
-          throw new Error('Failed to load test results');
-        }
-
         console.log('Data loaded successfully');
       } catch (error) {
         console.error('Error in initialization:', error);
@@ -158,75 +149,6 @@ export default function TestManagement() {
       setTests(data || []);
     } catch (error) {
       console.error('Error in fetchTests:', error);
-      throw error;
-    }
-  };
-
-  const fetchResults = async () => {
-    console.log('Fetching results...');
-    try {
-      // First, check if the test_results table exists and has any data
-      const { count, error: countError } = await supabase
-        .from('test_results')
-        .select('*', { count: 'exact', head: true });
-
-      if (countError) {
-        console.error('Error checking test_results table:', countError);
-        throw countError;
-      }
-
-      console.log('Number of test results:', count);
-
-      if (count === 0) {
-        console.log('No test results found');
-        setResults([]);
-        return;
-      }
-
-      // If we have results, fetch them with the student information
-      const { data, error } = await supabase
-        .from('test_results')
-        .select(`
-          id,
-          test_id,
-          student_id,
-          score,
-          time_taken,
-          answers,
-          started_at,
-          submitted_at,
-          created_at,
-          profiles:student_id (
-            name
-          )
-        `)
-        .order('submitted_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching results:', error);
-        throw error;
-      }
-
-      console.log('Results fetched:', data);
-      
-      // Map the results and handle potential null values
-      const mappedResults: TestResult[] = (data as unknown as TestResultWithProfile[])?.map(result => ({
-        id: result.id,
-        test_id: result.test_id,
-        student_id: result.student_id,
-        score: Number(result.score) || 0,
-        time_taken: result.time_taken,
-        answers: result.answers,
-        started_at: result.started_at,
-        submitted_at: result.submitted_at,
-        created_at: result.created_at,
-        student_name: result.profiles?.name || 'Unknown Student'
-      })) || [];
-
-      console.log('Mapped results:', mappedResults);
-      setResults(mappedResults);
-    } catch (error) {
-      console.error('Error in fetchResults:', error);
       throw error;
     }
   };
@@ -343,6 +265,34 @@ export default function TestManagement() {
     }
   };
 
+  const handleToggleActive = async (testId: string, currentActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('tests')
+        .update({ is_active: !currentActive })
+        .eq('id', testId);
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to update test status',
+          variant: 'destructive',
+        });
+        return;
+      }
+      fetchTests();
+      toast({
+        title: 'Success',
+        description: `Test ${!currentActive ? 'activated' : 'deactivated'} successfully`,
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update test status',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (error) {
     return (
       <div className="container mx-auto p-6">
@@ -426,9 +376,12 @@ export default function TestManagement() {
           {tests.length === 0 ? (
             <p className="text-gray-500">No tests created yet.</p>
           ) : (
-            <div className="space-y-4">
-              {tests.map((test) => (
-                <div key={test.id} className="border rounded-lg p-4 mb-4">
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              {tests.map((test, idx) => (
+                <div
+                  key={test.id}
+                  className={`p-4 ${idx !== tests.length - 1 ? 'border-b border-gray-200' : ''}`}
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium">{test.title}</h3>
@@ -437,6 +390,13 @@ export default function TestManagement() {
                       <p className="text-sm text-gray-500">Status: {test.is_active ? 'Active' : 'Inactive'}</p>
                     </div>
                     <div className="flex gap-2">
+                      <Button
+                        variant={test.is_active ? 'secondary' : 'default'}
+                        size="sm"
+                        onClick={() => handleToggleActive(test.id, test.is_active)}
+                      >
+                        {test.is_active ? 'Deactivate' : 'Activate'}
+                      </Button>
                       <Button
                         variant="destructive"
                         size="sm"
@@ -450,26 +410,6 @@ export default function TestManagement() {
                       </Button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Student Results</h2>
-          {results.length === 0 ? (
-            <p className="text-gray-500">No test results yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {results.map((result) => (
-                <div key={result.id} className="border rounded-lg p-4">
-                  <h3 className="font-medium">{result.student_name}</h3>
-                  <p className="text-sm text-gray-500">Score: {result.score}</p>
-                  <p className="text-sm text-gray-500">Time Taken: {result.time_taken} mins</p>
-                  <p className="text-sm text-gray-500">
-                    Submitted: {result.submitted_at ? new Date(result.submitted_at).toLocaleDateString() : 'Not submitted'}
-                  </p>
                 </div>
               ))}
             </div>

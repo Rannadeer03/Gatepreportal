@@ -153,12 +153,12 @@ export const TeacherDashboard: React.FC = () => {
       description: 'Upload and manage study materials'
     },
     {
-      id: 'schedule',
-      title: 'Class Schedule',
-      icon: <Calendar className="h-8 w-8" />,
-      image: '/images/schedule.jpg',
+      id: 'student-results',
+      title: 'Student Results',
+      icon: <BarChart2 className="h-8 w-8" />,
+      image: '/images/results.jpg',
       color: 'bg-yellow-500',
-      description: 'Manage class schedules'
+      description: 'View student test results'
     },
     {
       id: 'grades',
@@ -186,6 +186,8 @@ export const TeacherDashboard: React.FC = () => {
       navigate('/teacher/assignments');
     } else if (id === 'materials') {
       navigate('/teacher/course-materials');
+    } else if (id === 'student-results') {
+      navigate('/teacher/test-results');
     } else {
       console.log(`Clicked menu item: ${id}`);
     }
