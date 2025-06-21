@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "vite": "^6.2.6"
+    "vite": "^5.2.10"
   },
   "scripts": {
     "dev": "vite",
@@ -12,5 +12,8 @@
     "@react-oauth/google": "^0.12.2",
     "googleapis": "^149.0.0",
     "react-google-login": "^5.2.2"
-  }
+  },
+  "engines": {
+    "node": "20.x"
+  }  
 }
