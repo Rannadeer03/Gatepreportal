@@ -35,9 +35,6 @@ const TakeTestPage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<any>(null);
-  const [testStarted, setTestStarted] = useState(false);
-  const [startTime, setStartTime] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -102,16 +99,11 @@ const TakeTestPage: React.FC = () => {
         .select('*')
         .eq('test_id', testId)
         .eq('student_id', user.id)
-        .single();
+        .maybeSingle();
 
       console.log('resultData', resultData, 'resultError', resultError);
 
       if (resultData) {
-        setTestResult(resultData);
-        if (resultData.status === 'completed') {
-          navigate(`/test-result/${testId}`);
-          return;
-        }
         setAnswers(resultData.answers || {});
         if (resultData.started_at) {
           const timeElapsed = Math.floor((Date.now() - new Date(resultData.started_at).getTime()) / 1000 / 60);
@@ -126,34 +118,32 @@ const TakeTestPage: React.FC = () => {
           .eq('student_id', user.id)
           .maybeSingle();
         if (checkResult) {
-          setError('You have already started or submitted this test.');
+          // Resume any existing test (even if completed)
+          setAnswers(checkResult.answers || {});
+          setTimeLeft(testData.time_limit || testData.duration);
           return;
         }
         // Create new test result
         const { data, error } = await supabase
           .from('test_results')
-          .insert({
-            test_id: testData.id,
-            student_id: user.id,
-            total_questions: questionsData.length,
-            status: 'in_progress',
-            started_at: new Date().toISOString(),
-            answers: {}
-          })
+          .upsert([
+            {
+              test_id: testData.id,
+              student_id: user.id,
+              total_questions: questionsData.length,
+              status: 'in_progress',
+              started_at: new Date().toISOString(),
+              answers: {}
+            }
+          ], { onConflict: 'test_id,student_id' })
           .select()
           .single();
 
         if (error) {
-          if (error.code === '23505') {
-            setError('You have already started or submitted this test.');
-          } else {
-            setError(error.message);
-          }
+          setError(error.message || 'An error occurred while starting the test.');
           return;
         }
-        setTestResult(data);
-        setTestStarted(true);
-        setStartTime(new Date());
+        setAnswers(data.answers || {});
         setTimeLeft(testData.time_limit || testData.duration);
       }
     } catch (error: any) {
@@ -257,83 +247,6 @@ const TakeTestPage: React.FC = () => {
         setError(error.message || 'An error occurred while submitting the test.');
       }
       setIsSubmitting(false);
-    }
-  };
-
-  const startTest = async () => {
-    if (!test || !user) return;
-
-    try {
-      // First try to get existing test result
-      const { data: existingResult, error: fetchError } = await supabase
-        .from('test_results')
-        .select('*')
-        .eq('test_id', test.id)
-        .eq('student_id', user.id)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error('Error fetching existing test result:', fetchError);
-        throw fetchError;
-      }
-
-      let testResult;
-      if (existingResult) {
-        // Update existing test result
-        const { data, error: updateError } = await supabase
-          .from('test_results')
-          .update({
-            status: 'in_progress',
-            started_at: new Date().toISOString(),
-            answers: {},
-            total_questions: questions.length,
-            score: 0,
-            correct_answers: 0,
-            wrong_answers: 0,
-            unattempted: questions.length
-          })
-          .eq('id', existingResult.id)
-          .select()
-          .single();
-
-        if (updateError) {
-          console.error('Error updating test result:', updateError);
-          throw updateError;
-        }
-        testResult = data;
-      } else {
-        // Create new test result
-        const { data, error: insertError } = await supabase
-          .from('test_results')
-          .insert({
-            test_id: test.id,
-            student_id: user.id,
-            total_questions: questions.length,
-            status: 'in_progress',
-            started_at: new Date().toISOString(),
-            answers: {},
-            score: 0,
-            correct_answers: 0,
-            wrong_answers: 0,
-            unattempted: questions.length
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Error creating test result:', insertError);
-          throw insertError;
-        }
-        testResult = data;
-      }
-
-      setTestResult(testResult);
-      setTestStarted(true);
-      setStartTime(new Date());
-      setTimeLeft(test.time_limit || test.duration);
-    } catch (error) {
-      console.error('Error starting test:', error);
-      setError('Failed to start test. Please try again.');
     }
   };
 
