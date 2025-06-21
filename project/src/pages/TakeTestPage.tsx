@@ -118,6 +118,17 @@ const TakeTestPage: React.FC = () => {
           setTimeLeft((testData.time_limit || testData.duration) - timeElapsed);
         }
       } else {
+        // Check again before insert to avoid race conditions
+        const { data: checkResult } = await supabase
+          .from('test_results')
+          .select('*')
+          .eq('test_id', testData.id)
+          .eq('student_id', user.id)
+          .maybeSingle();
+        if (checkResult) {
+          setError('You have already started or submitted this test.');
+          return;
+        }
         // Create new test result
         const { data, error } = await supabase
           .from('test_results')
@@ -132,7 +143,14 @@ const TakeTestPage: React.FC = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '23505') {
+            setError('You have already started or submitted this test.');
+          } else {
+            setError(error.message);
+          }
+          return;
+        }
         setTestResult(data);
         setTestStarted(true);
         setStartTime(new Date());
@@ -140,7 +158,7 @@ const TakeTestPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error fetching test:', error);
-      setError(error.message);
+      setError(error.message || 'An error occurred while fetching the test.');
     }
   };
 
@@ -233,8 +251,11 @@ const TakeTestPage: React.FC = () => {
       // Navigate to results page
       navigate(`/test-result/${testId}`);
     } catch (error: any) {
-      console.error('Error submitting test:', error);
-      setError(error.message);
+      if (error.code === '23505') {
+        setError('You have already submitted this test.');
+      } else {
+        setError(error.message || 'An error occurred while submitting the test.');
+      }
       setIsSubmitting(false);
     }
   };
