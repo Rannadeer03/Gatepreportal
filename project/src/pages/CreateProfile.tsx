@@ -30,15 +30,15 @@ export const CreateProfile: React.FC = () => {
     try {
       const formData = new FormData(event.target as HTMLFormElement);
       const profileData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        role: formData.get('role'),
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        role: formData.get('role') as 'student' | 'teacher',
       };
 
       const response = await authService.createProfile(profileData);
 
       if (response) {
-        navigate(profileData.role === 'student' ? '/student-dashboard' : '/teacher-dashboard');
+        navigate(profileData.role === 'student' ? '/student-main-dashboard' : '/teacher-main-dashboard');
       }
     } catch (err) {
       setError('Failed to create profile. Please try again.');

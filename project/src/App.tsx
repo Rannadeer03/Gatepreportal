@@ -23,6 +23,12 @@ import { Profile } from './pages/Profile';
 import TestManagement from './pages/TestManagement';
 import TakeTestPage from './pages/TakeTestPage';
 import TestResults from './pages/TestResults';
+import { StudentMainDashboard } from './pages/StudentMainDashboard';
+import { TeacherMainDashboard } from './pages/TeacherMainDashboard';
+import { GatePreparationDashboard } from './pages/GatePreparationDashboard';
+import StudentAcademicDashboard from './pages/StudentAcademicDashboard';
+import StudentPlacementDashboard from './pages/StudentPlacementDashboard';
+import StudentTestResults from './pages/StudentTestResults';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -52,7 +58,9 @@ const App: React.FC = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/create-profile" element={<CreateProfile />} />
             <Route path="/student-dashboard" element={<NewStudentDashboard />} />
+            <Route path="/student-main-dashboard" element={<StudentMainDashboard />} />
             <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+            <Route path="/teacher-main-dashboard" element={<TeacherMainDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/study-materials" element={<StudyMaterials />} />
             <Route path="/teacher/assignments" element={<TeacherAssignmentUpload />} />
@@ -66,6 +74,13 @@ const App: React.FC = () => {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/teacher/test-results" element={<TestResults />} />
+            <Route path="/gate-preparation/tests" element={<GatePreparationDashboard />} />
+            <Route path="/gate-preparation/materials" element={<GatePreparationDashboard />} />
+            <Route path="/gate-preparation/schedule" element={<GatePreparationDashboard />} />
+            <Route path="/gate-preparation/progress" element={<GatePreparationDashboard />} />
+            <Route path="/student-academic-dashboard" element={<StudentAcademicDashboard />} />
+            <Route path="/student-placement-dashboard" element={<StudentPlacementDashboard />} />
+            <Route path="/student-test-results" element={<StudentTestResults />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

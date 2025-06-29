@@ -19,10 +19,10 @@ export const Login: React.FC = () => {
       console.log('Profile detected, navigating to dashboard...', profile.role);
       switch (profile.role) {
         case 'student':
-          navigate('/student-dashboard');
+          navigate('/student-main-dashboard');
           break;
         case 'teacher':
-          navigate('/teacher-dashboard');
+          navigate('/teacher-main-dashboard');
           break;
         case 'admin':
           navigate('/admin-dashboard');

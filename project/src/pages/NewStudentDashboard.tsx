@@ -13,7 +13,9 @@ import {
   Award,
   Clock,
   Book,
-  X
+  X,
+  TrendingUp,
+  Users
 } from 'lucide-react';
 import { TestCompletionStatus } from '../components/TestCompletionStatus';
 import { useAuthStore } from '../store/authStore';
@@ -36,6 +38,73 @@ interface Subject {
   code: string;
   description?: string;
 }
+
+const GateFeatureCards = [
+  {
+    id: 'available-tests',
+    title: 'Available Tests',
+    icon: <FileText className="h-10 w-10" />,
+    description: 'See and take your available GATE tests',
+    color: 'bg-red-500',
+    action: (_navigate: any, setShowTestsModal: any) => setShowTestsModal(true)
+  },
+  {
+    id: 'study-materials',
+    title: 'Study Materials',
+    icon: <BookOpen className="h-10 w-10" />,
+    description: 'Access curated GATE study resources',
+    color: 'bg-pink-500',
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/study-materials')
+  },
+  {
+    id: 'assignments',
+    title: 'Assignments',
+    icon: <ClipboardList className="h-10 w-10" />,
+    description: 'View and submit GATE assignments',
+    color: 'bg-blue-500',
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/student/assignments')
+  },
+  {
+    id: 'results',
+    title: 'Test Results',
+    icon: <Award className="h-10 w-10" />,
+    description: 'Check your GATE test results',
+    color: 'bg-green-500',
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/student-test-results')
+  },
+  {
+    id: 'schedule',
+    title: 'Preparation Schedule',
+    icon: <Calendar className="h-10 w-10" />,
+    description: 'View and manage your GATE preparation schedule',
+    color: 'bg-yellow-500',
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/gate/schedule')
+  },
+  {
+    id: 'progress',
+    title: 'Progress Tracker',
+    icon: <TrendingUp className="h-10 w-10" />,
+    description: 'Monitor your preparation progress',
+    color: 'bg-indigo-500',
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/gate/progress')
+  },
+  {
+    id: 'time-management',
+    title: 'Time Management',
+    icon: <Clock className="h-10 w-10" />,
+    description: 'Tips and tools for managing your study time',
+    color: 'bg-purple-500',
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/gate/time-management')
+  },
+  {
+    id: 'mentorship',
+    title: 'Mentorship',
+    icon: <Users className="h-10 w-10" />,
+    description: 'Connect with mentors for guidance',
+    color: 'bg-emerald-500',
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/gate/mentorship')
+  }
+];
 
 export const NewStudentDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -197,60 +266,33 @@ export const NewStudentDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Student Dashboard</h1>
-        
-        {/* Main Menu Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {/* Tests Menu Item */}
-          <div 
-            onClick={() => handleMenuClick('tests')}
-            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center">
-              <FileText className="h-8 w-8 text-indigo-600" />
-              <div className="ml-4">
-                <h2 className="text-lg font-semibold text-gray-900">Available Tests</h2>
-                <p className="text-sm text-gray-500">{availableTests.length} tests available</p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/student-main-dashboard')}
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left h-5 w-5 mr-2"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          <span className="text-base font-medium">Back to Student Dashboard</span>
+        </button>
+        {/* Heading */}
+        <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-4">GATE Preparation Dashboard</h1>
+        <p className="text-center text-lg text-gray-600 mb-10">Access all your GATE resources, practice tests, and progress tools in one place.</p>
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {GateFeatureCards.map((feature) => (
+            <div
+              key={feature.id}
+              onClick={() => feature.action(navigate, setShowTestsModal)}
+              className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center cursor-pointer hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              <div className={`${feature.color} p-4 rounded-lg text-white mb-4`}>{feature.icon}</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">{feature.title}</h3>
+              <p className="text-gray-600 text-center text-sm">{feature.description}</p>
             </div>
-          </div>
-
-          {/* Study Materials Menu Item */}
-          <div 
-            onClick={() => handleMenuClick('study-materials')}
-            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center">
-              <Book className="h-8 w-8 text-indigo-600" />
-              <div className="ml-4">
-                <h2 className="text-lg font-semibold text-gray-900">Study Materials</h2>
-                <p className="text-sm text-gray-500">Access your learning resources</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Assignments Menu Item */}
-          <div 
-            onClick={() => handleMenuClick('assignments')}
-            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center">
-              <ClipboardList className="h-8 w-8 text-indigo-600" />
-              <div className="ml-4">
-                <h2 className="text-lg font-semibold text-gray-900">Assignments</h2>
-                <p className="text-sm text-gray-500">View and submit assignments</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-
-        {/* Test Completion Status Section */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <TestCompletionStatus />
-        </div>
-
         {/* Tests Modal */}
         {showTestsModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -265,7 +307,6 @@ export const NewStudentDashboard: React.FC = () => {
                     <X className="h-6 w-6" />
                   </button>
                 </div>
-
                 {availableTests.length === 0 ? (
                   <p className="text-gray-500 text-center py-4">No tests available at the moment.</p>
                 ) : (

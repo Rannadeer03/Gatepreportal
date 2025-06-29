@@ -43,7 +43,7 @@ const TakeTestPage: React.FC = () => {
     }
 
     if (profile?.role !== 'student') {
-      navigate('/student-dashboard');
+      navigate('/student-main-dashboard');
       return;
     }
 

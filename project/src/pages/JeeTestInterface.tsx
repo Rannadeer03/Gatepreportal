@@ -35,7 +35,7 @@ const JeeTestInterface: React.FC = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching test:', error);
-        navigate('/student-dashboard');
+        navigate('/student-main-dashboard');
       }
     };
 

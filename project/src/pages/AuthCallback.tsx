@@ -15,11 +15,11 @@ export const AuthCallback: React.FC = () => {
         setTimeout(() => {
           const currentProfile = useAuthStore.getState().profile;
           if (currentProfile) {
-            const dashboardRoute = 
-              currentProfile.role === 'student' ? '/student-dashboard' :
-              currentProfile.role === 'teacher' ? '/teacher-dashboard' :
-              '/admin-dashboard';
-            navigate(dashboardRoute);
+            navigate(
+              currentProfile.role === 'student' ? '/student-main-dashboard' :
+              currentProfile.role === 'teacher' ? '/teacher-main-dashboard' :
+              currentProfile.role === 'admin' ? '/admin-dashboard' : '/'
+            );
           } else {
             navigate('/register');
           }

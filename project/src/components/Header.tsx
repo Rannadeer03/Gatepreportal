@@ -29,8 +29,8 @@ export const Header: React.FC = () => {
   const { signOut } = useAuthStore();
   
   const isLoginPage = location.pathname === '/login';
-  const isAuthenticated = ['/student-dashboard', '/teacher-dashboard'].includes(location.pathname);
-  const isTeacher = location.pathname === '/teacher-dashboard';
+  const isAuthenticated = ['/student-main-dashboard', '/teacher-main-dashboard'].includes(location.pathname);
+  const isTeacher = location.pathname === '/teacher-main-dashboard';
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -60,10 +60,10 @@ export const Header: React.FC = () => {
     if (isTeacher) {
       return [
         { 
-          to: '/teacher-dashboard', 
+          to: '/teacher-main-dashboard', 
           icon: <LayoutDashboard className="h-5 w-5" />, 
           text: 'Dashboard',
-          active: location.pathname === '/teacher-dashboard'
+          active: location.pathname === '/teacher-main-dashboard'
         },
         { 
           to: '/create-test', 
@@ -87,10 +87,10 @@ export const Header: React.FC = () => {
     }
     return [
       { 
-        to: '/student-dashboard', 
+        to: '/student-main-dashboard', 
         icon: <LayoutDashboard className="h-5 w-5" />, 
         text: 'Dashboard',
-        active: location.pathname === '/student-dashboard'
+        active: location.pathname === '/student-main-dashboard'
       }
     ];
   };
@@ -101,7 +101,7 @@ export const Header: React.FC = () => {
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Brand */}
           <Link 
-            to={isAuthenticated ? (isTeacher ? '/teacher-dashboard' : '/student-dashboard') : '/'} 
+            to={isAuthenticated ? (isTeacher ? '/teacher-main-dashboard' : '/student-main-dashboard') : '/'} 
             className="flex items-center space-x-2 hover:opacity-75 transition-opacity"
           >
             <BookOpen className="h-8 w-8 text-indigo-600" />

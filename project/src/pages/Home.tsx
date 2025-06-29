@@ -411,20 +411,38 @@ const Home: React.FC = () => {
 
       {/* CTA Section */}
       <div className="bg-indigo-700">
-        <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             <span className="block">Ready to get started?</span>
-            <span className="block">Create your account today.</span>
+            <span className="block">Choose your dashboard.</span>
           </h2>
           <p className="mt-4 text-lg leading-6 text-indigo-200">
             Join thousands of students and teachers already using our platform.
           </p>
-          <Link
-            to="/login"
-            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 sm:w-auto"
-          >
-            Get Started
-          </Link>
+          
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/student-main-dashboard"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 transition-colors"
+            >
+              <GraduationCap className="w-5 h-5 mr-2" />
+              Student Dashboard
+            </Link>
+            <Link
+              to="/teacher-main-dashboard"
+              className="inline-flex items-center justify-center px-6 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-indigo-600 transition-colors"
+            >
+              <Users className="w-5 h-5 mr-2" />
+              Teacher Dashboard
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-yellow-400 hover:bg-yellow-300 transition-colors"
+            >
+              <Rocket className="w-5 h-5 mr-2" />
+              Login / Register
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -132,7 +132,7 @@ const StudentAssignmentView: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center mb-6">
           <button
-            onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/student-dashboard')}
+            onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/student-main-dashboard')}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
           >
             <ArrowLeft className="h-6 w-6 text-gray-600" />
