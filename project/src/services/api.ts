@@ -592,4 +592,19 @@ export const api = {
     }
     return response.json();
   },
+
+  // New function to get ALL assignments for teacher review
+  async getAllAssignmentsForTeacher() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get all assignments with subject information
+    const { data: assignments, error: assignmentsError } = await supabase
+      .from('assignments')
+      .select(`*, subject:subjects(name, code)`)
+      .order('created_at', { ascending: false });
+    
+    if (assignmentsError) throw assignmentsError;
+    return assignments || [];
+  },
 };

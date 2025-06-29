@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, FileText, Download, Calendar, Clock, Eye, BookOpen, AlertCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Calendar, Clock, Eye, BookOpen, AlertCircle, Star, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 import { useToast } from './ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+import { notificationService } from '../services/notificationService';
 
 interface Assignment {
   id: string;
@@ -24,25 +26,25 @@ const StudentAssignmentView: React.FC = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [submissions, setSubmissions] = useState<Record<string, any>>({});
+  const [uploading, setUploading] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, profile } = useAuthStore();
 
   useEffect(() => {
     fetchAssignments();
-  }, []);
+    if (user?.id) fetchSubmissions();
+  }, [user]);
 
   const fetchAssignments = async () => {
     try {
       setLoading(true);
       setError('');
-
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignments')
         .select('*, subjects(name, code)');
-
       if (assignmentsError) throw assignmentsError;
-
-      // Transform the data to match our interface
       const transformedAssignments = (assignmentsData || []).map(assignment => ({
         id: assignment.id,
         title: assignment.title,
@@ -55,7 +57,6 @@ const StudentAssignmentView: React.FC = () => {
         filename: assignment.filename,
         created_at: assignment.created_at
       }));
-
       setAssignments(transformedAssignments);
     } catch (err) {
       console.error('Fetch error:', err);
@@ -67,6 +68,62 @@ const StudentAssignmentView: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSubmissions = async () => {
+    if (!user?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('assignment_submissions')
+        .select('*')
+        .eq('student_id', user.id);
+      if (error) throw error;
+      const map: Record<string, any> = {};
+      (data || []).forEach((sub: any) => { map[sub.assignment_id] = sub; });
+      setSubmissions(map);
+    } catch (err) {
+      console.error('Fetch submissions error:', err);
+    }
+  };
+
+  const handleUpload = async (assignment: Assignment, file: File) => {
+    if (!user?.id) return;
+    setUploading(assignment.id);
+    try {
+      // Upload file to storage
+      const ext = file.name.split('.').pop();
+      const filePath = `${user.id}/${assignment.id}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('student-assignments')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      // Insert submission record
+      const { error: insertError } = await supabase
+        .from('assignment_submissions')
+        .upsert({
+          assignment_id: assignment.id,
+          student_id: user.id,
+          file_path: filePath,
+          filename: file.name,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        });
+      if (insertError) throw insertError;
+      
+      // Create notification for teachers
+      await notificationService.createSubmissionNotification(
+        assignment.id,
+        assignment.title,
+        profile?.full_name || 'Student'
+      );
+      
+      toast({ title: 'Success', description: 'Assignment uploaded successfully!' });
+      fetchSubmissions();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to upload assignment', variant: 'destructive' });
+    } finally {
+      setUploading(null);
     }
   };
 
@@ -128,6 +185,10 @@ const StudentAssignmentView: React.FC = () => {
     return diffDays;
   };
 
+  if (!user?.id) {
+    return <div className="min-h-screen flex items-center justify-center text-lg text-gray-600">No user found. Please log in again.</div>;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -178,6 +239,7 @@ const StudentAssignmentView: React.FC = () => {
               {subjectAssignments.map((assignment) => {
                 const overdue = isOverdue(assignment.due_date);
                 const daysUntilDue = getDaysUntilDue(assignment.due_date);
+                const submission = submissions[assignment.id];
                 
                 return (
                   <Card key={assignment.id} className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
@@ -205,14 +267,19 @@ const StudentAssignmentView: React.FC = () => {
                           <span className={`ml-1 font-medium ${overdue ? 'text-red-600' : daysUntilDue <= 3 ? 'text-orange-600' : 'text-gray-900'}`}>
                             {format(new Date(assignment.due_date), 'MMM dd, yyyy')}
                           </span>
-                          {overdue && (
+                          {overdue && !submission && (
                             <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
                               Overdue
                             </span>
                           )}
-                          {!overdue && daysUntilDue <= 3 && (
+                          {!overdue && daysUntilDue <= 3 && !submission && (
                             <span className="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded">
                               Due Soon
+                            </span>
+                          )}
+                          {submission && (
+                            <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                              Submitted
                             </span>
                           )}
                         </div>
@@ -223,7 +290,7 @@ const StudentAssignmentView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mb-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -243,6 +310,76 @@ const StudentAssignmentView: React.FC = () => {
                           Download
                         </Button>
                       </div>
+
+                      {/* Assignment Submission UI */}
+                      {submission ? (
+                        <div className="mt-2 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${
+                              submission.status === 'graded' 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {submission.status === 'graded' ? 'Graded' : 'Assignment Done'}
+                            </span>
+                            <a
+                              href={supabase.storage.from('student-assignments').getPublicUrl(submission.file_path).data.publicUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline text-xs"
+                            >
+                              View Submission
+                            </a>
+                          </div>
+                          
+                          {/* Show grade and feedback if graded */}
+                          {submission.status === 'graded' && submission.grade !== null && (
+                            <div className="bg-white rounded-lg p-3 border border-gray-200">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <Star className="h-4 w-4 text-yellow-500" />
+                                <span className="font-medium text-gray-900">Grade: {submission.grade}/100</span>
+                                {submission.graded_at && (
+                                  <span className="text-xs text-gray-500">
+                                    Graded: {format(new Date(submission.graded_at), 'MMM dd, yyyy')}
+                                  </span>
+                                )}
+                              </div>
+                              {submission.feedback && (
+                                <div className="flex items-start space-x-2">
+                                  <MessageSquare className="h-4 w-4 text-blue-500 mt-0.5" />
+                                  <p className="text-sm text-gray-700">{submission.feedback}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <form
+                          className="mt-2 flex items-center gap-2"
+                          onSubmit={e => {
+                            e.preventDefault();
+                            const file = (e.target as any).file.files[0];
+                            if (file) handleUpload(assignment, file);
+                          }}
+                        >
+                          <input
+                            type="file"
+                            name="file"
+                            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                            className="block text-xs"
+                            required
+                            disabled={uploading === assignment.id}
+                          />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            disabled={uploading === assignment.id}
+                            className="bg-blue-600 text-white px-3 py-1 rounded"
+                          >
+                            {uploading === assignment.id ? 'Uploading...' : 'Upload'}
+                          </Button>
+                        </form>
+                      )}
                     </CardContent>
                   </Card>
                 );

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { Clock, Save, AlertTriangle } from 'lucide-react';
+import { notificationService } from '../services/notificationService';
 
 interface Question {
   id: string;
@@ -237,6 +238,17 @@ const TakeTestPage: React.FC = () => {
         .eq('student_id', user?.id);
 
       if (error) throw error;
+
+      // Create notification for teachers
+      if (test && profile) {
+        await notificationService.createTestCompletionNotification(
+          test.id,
+          test.title,
+          profile.full_name || 'Student',
+          Math.round(score),
+          questions.length
+        );
+      }
 
       // Navigate to results page
       navigate(`/test-result/${testId}`);

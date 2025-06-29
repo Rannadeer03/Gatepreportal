@@ -48,6 +48,7 @@ const CreateTestPage: React.FC = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(false);
 
   const subjects = [
     'Engineering Mathematics',
@@ -286,7 +287,8 @@ const CreateTestPage: React.FC = () => {
         hard_count: 0,
         target_easy: 0.0,
         target_medium: 0.0,
-        target_hard: 0.0
+        target_hard: 0.0,
+        allow_multiple_attempts: allowMultipleAttempts
       };
 
       console.log('Creating test with data:', testData);
@@ -404,6 +406,19 @@ const CreateTestPage: React.FC = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 placeholder="Enter duration"
               />
+            </div>
+            {/* Allow Multiple Attempts Checkbox */}
+            <div className="flex items-center mt-2">
+              <input
+                type="checkbox"
+                id="allowMultipleAttempts"
+                checked={allowMultipleAttempts}
+                onChange={e => setAllowMultipleAttempts(e.target.checked)}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label htmlFor="allowMultipleAttempts" className="ml-2 text-sm text-gray-700">
+                Allow students to attempt this test multiple times
+              </label>
             </div>
           </div>
 

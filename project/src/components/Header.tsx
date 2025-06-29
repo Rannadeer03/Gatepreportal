@@ -17,12 +17,11 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import NotificationBell from './NotificationBell';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showHelpMenu, setShowHelpMenu] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,13 +34,11 @@ export const Header: React.FC = () => {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showProfileMenu || showNotifications || showHelpMenu) {
+      if (showProfileMenu || showHelpMenu) {
         const target = event.target as HTMLElement;
         if (!target.closest('.profile-menu') && 
-            !target.closest('.notifications-menu') && 
             !target.closest('.help-menu')) {
           setShowProfileMenu(false);
-          setShowNotifications(false);
           setShowHelpMenu(false);
         }
       }
@@ -49,7 +46,7 @@ export const Header: React.FC = () => {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showProfileMenu, showNotifications, showHelpMenu]);
+  }, [showProfileMenu, showHelpMenu]);
 
   const handleLogout = async () => {
     await signOut();
@@ -158,33 +155,7 @@ export const Header: React.FC = () => {
                 ))}
 
                 {/* Notifications */}
-                <div className="relative notifications-menu">
-                  <button 
-                    onClick={() => setShowNotifications(!showNotifications)}
-                    className={`p-2 rounded-full transition-colors ${
-                      showNotifications 
-                        ? 'bg-gray-100 text-gray-900' 
-                        : 'text-gray-400 hover:text-gray-500 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Bell className="h-5 w-5" />
-                  </button>
-                  
-                  {showNotifications && (
-                    <div className="absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                      <div className="p-4">
-                        <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
-                        {notifications.length === 0 ? (
-                          <p className="mt-2 text-sm text-gray-500">No new notifications</p>
-                        ) : (
-                          <div className="mt-2 space-y-2">
-                            {/* Add notifications here */}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <NotificationBell />
 
                 {/* Profile Menu */}
                 <div className="relative profile-menu">

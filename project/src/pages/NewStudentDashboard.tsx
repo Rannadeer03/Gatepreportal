@@ -30,6 +30,7 @@ interface Test {
   is_scheduled: boolean;
   access_window_start: string | null;
   access_window_end: string | null;
+  allow_multiple_attempts: boolean;
 }
 
 interface Subject {
@@ -172,7 +173,7 @@ export const NewStudentDashboard: React.FC = () => {
 
       // Filter out completed tests and those not in access window
       const filteredTests = (tests?.filter(test =>
-        !completedTestIds.includes(test.id) && isTestAvailableNow(test)
+        (test.allow_multiple_attempts || !completedTestIds.includes(test.id)) && isTestAvailableNow(test)
       )) || [];
       setAvailableTests(filteredTests);
     } catch (error) {

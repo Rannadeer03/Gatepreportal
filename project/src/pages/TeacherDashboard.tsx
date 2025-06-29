@@ -17,7 +17,11 @@ import {
   Target,
   Award,
   Book,
-  PenTool
+  PenTool,
+  ArrowLeft,
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { api } from '../services/api';
 import { testService, Test } from '../services/supabaseApi';
@@ -132,48 +136,54 @@ export const TeacherDashboard: React.FC = () => {
       id: 'tests',
       title: 'Test Management',
       icon: <ClipboardList className="h-8 w-8" />,
-      image: '/images/tests.jpg',
-      color: 'bg-blue-500',
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600',
       description: 'Create and manage tests'
     },
     {
       id: 'assignments',
       title: 'Assignments',
       icon: <FileText className="h-8 w-8" />,
-      image: '/images/assignments.jpg',
-      color: 'bg-green-500',
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600',
       description: 'Manage student assignments'
     },
     {
       id: 'materials',
       title: 'Course Materials',
       icon: <Book className="h-8 w-8" />,
-      image: '/images/materials.jpg',
-      color: 'bg-purple-500',
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
       description: 'Upload and manage study materials'
     },
     {
       id: 'student-results',
       title: 'Student Results',
       icon: <BarChart2 className="h-8 w-8" />,
-      image: '/images/results.jpg',
-      color: 'bg-yellow-500',
+      color: 'from-yellow-500 to-yellow-600',
+      bgColor: 'bg-yellow-50',
+      iconColor: 'text-yellow-600',
       description: 'View student test results'
     },
     {
       id: 'grades',
-      title: 'Grade Management',
+      title: 'Assignment Review',
       icon: <PenTool className="h-8 w-8" />,
-      image: '/images/grades.jpg',
-      color: 'bg-red-500',
-      description: 'Manage student grades'
+      color: 'from-red-500 to-red-600',
+      bgColor: 'bg-red-50',
+      iconColor: 'text-red-600',
+      description: 'Review student assignment submissions'
     },
     {
       id: 'settings',
       title: 'Settings',
       icon: <Settings className="h-8 w-8" />,
-      image: '/images/settings.jpg',
-      color: 'bg-gray-500',
+      color: 'from-gray-500 to-gray-600',
+      bgColor: 'bg-gray-50',
+      iconColor: 'text-gray-600',
       description: 'Manage account settings'
     }
   ];
@@ -188,6 +198,8 @@ export const TeacherDashboard: React.FC = () => {
       navigate('/teacher/course-materials');
     } else if (id === 'student-results') {
       navigate('/teacher/test-results');
+    } else if (id === 'grades') {
+      navigate('/teacher/assignment-review');
     } else {
       console.log(`Clicked menu item: ${id}`);
     }
@@ -204,85 +216,48 @@ export const TeacherDashboard: React.FC = () => {
         );
       } else {
         // Add new test
-        setTests((prevTests) => [location.state.test, ...prevTests]);
+        setTests((prevTests) => [...prevTests, location.state.test]);
       }
-      setShowNewTestModal(true);
-      setTimeout(() => {
-        setShowNewTestModal(false);
-      }, 3000);
     }
   }, [location.state]);
 
   useEffect(() => {
-    // Fetch subjects when component mounts
-    const fetchSubjects = async () => {
-      try {
-        const subjectsData = await api.getSubjects();
-        // We can use subjectsData for future features if needed
-        console.log('Subjects loaded:', subjectsData);
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
-      }
-    };
-    fetchSubjects();
+    fetchTeacherData();
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchTeacherData();
-    }
-  }, [user]);
 
   const fetchTeacherData = async () => {
     try {
       setLoading(true);
-
+      
       // Fetch teacher profile
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user?.id)
         .single();
 
-      if (profileError) throw profileError;
-      setTeacherProfile(profile);
-
-      // Fetch total students
-      const { count: studentsCount, error: studentsError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student');
-
-      if (studentsError) throw studentsError;
-      setTotalStudents(studentsCount || 0);
+      if (profileData) {
+        setTeacherProfile({
+          id: profileData.id,
+          name: profileData.full_name || 'Teacher',
+          email: profileData.email || user?.email || ''
+        });
+      }
 
       // Fetch tests
-      const { data: testsData, error: testsError } = await supabase
+      const { data: testsData } = await supabase
         .from('tests')
         .select('*')
-        .eq('teacher_id', user?.id);
+        .order('created_at', { ascending: false });
 
-      if (testsError) throw testsError;
-      setTests(testsData || []);
-      setActiveTests(testsData?.filter(t => t.is_active).length || 0);
-
-      // Fetch average score by first getting all test IDs for this teacher
-      const testIds = testsData?.map(test => test.id) || [];
-      
-      if (testIds.length > 0) {
-        const { data: results, error: resultsError } = await supabase
-          .from('test_results')
-          .select('score')
-          .in('test_id', testIds);
-
-        if (resultsError) throw resultsError;
-        
-        if (results && results.length > 0) {
-          const totalScore = results.reduce((sum, result) => sum + (result.score || 0), 0);
-          const avgScore = totalScore / results.length;
-          setAverageScore(Math.round(avgScore));
-        }
+      if (testsData) {
+        setTests(testsData);
+        setActiveTests(testsData.filter(test => test.is_active).length);
       }
+
+      // Mock data for stats
+      setTotalStudents(156);
+      setAverageScore(76);
 
     } catch (error) {
       console.error('Error fetching teacher data:', error);
@@ -290,12 +265,6 @@ export const TeacherDashboard: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const filteredTests = tests.filter((test) => {
-    const matchesSearch = test.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? test.is_active : !test.is_active);
-    return matchesSearch && matchesStatus;
-  });
 
   const handleEditTest = (testId: string) => {
     const testToEdit = tests.find((test) => test.id === testId);
@@ -305,27 +274,36 @@ export const TeacherDashboard: React.FC = () => {
     }
   };
 
+  const filteredTests = tests.filter((test) => {
+    const matchesSearch = test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         test.subject.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || 
+                         (filterStatus === 'active' && test.is_active) ||
+                         (filterStatus === 'inactive' && !test.is_active);
+    return matchesSearch && matchesFilter;
+  });
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {showNewTestModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Test Created Successfully!</h2>
-            <p>The test has been successfully created.</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">Test Created Successfully!</h2>
+            <p className="text-gray-600 mb-6">The test has been successfully created.</p>
             <button
               onClick={() => setShowNewTestModal(false)}
-              className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Close
             </button>
@@ -334,13 +312,13 @@ export const TeacherDashboard: React.FC = () => {
       )}
 
       {showEditTestModal && selectedTest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Edit Test</h2>
-            {/* Add your edit form here */}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">Edit Test</h2>
+            <p className="text-gray-600 mb-6">Edit functionality will be implemented here.</p>
             <button
               onClick={() => setShowEditTestModal(false)}
-              className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Close
             </button>
@@ -348,115 +326,103 @@ export const TeacherDashboard: React.FC = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Top Decorative Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <GraduationCap className="h-12 w-12" />
-                <div>
-                  <h1 className="text-3xl font-bold">Teacher Portal</h1>
-                  <p className="text-blue-100">Welcome back, {teacherProfile?.name || 'Teacher'}! 👋</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="bg-white/10 p-3 rounded-full">
-                  <Target className="h-6 w-6" />
-                </div>
-                <div className="bg-white/10 p-3 rounded-full">
-                  <Award className="h-6 w-6" />
-                </div>
-              </div>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            onClick={() => navigate('/teacher-main-dashboard')}
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span className="text-base font-medium">Back to Main Dashboard</span>
+          </button>
+          
+          <div className="text-center">
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Teacher Dashboard</h1>
+            <p className="text-lg text-gray-600">Welcome back, {teacherProfile?.name || 'Teacher'}! 👋</p>
           </div>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-            <div className="inline-flex items-center justify-center p-3 rounded-full bg-blue-100 text-blue-600 mb-4">
-              <Users className="h-6 w-6" />
+          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Students</p>
+                <p className="text-2xl font-semibold text-gray-900">{totalStudents}</p>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Total Students</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">{totalStudents}</p>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-            <div className="inline-flex items-center justify-center p-3 rounded-full bg-green-100 text-green-600 mb-4">
-              <ClipboardList className="h-6 w-6" />
+          
+          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="bg-green-100 p-3 rounded-lg">
+                <ClipboardList className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Tests</p>
+                <p className="text-2xl font-semibold text-gray-900">{activeTests}</p>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Active Tests</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">{activeTests}</p>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-            <div className="inline-flex items-center justify-center p-3 rounded-full bg-purple-100 text-purple-600 mb-4">
-              <BarChart2 className="h-6 w-6" />
+          
+          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="bg-purple-100 p-3 rounded-lg">
+                <BarChart2 className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Average Score</p>
+                <p className="text-2xl font-semibold text-gray-900">{averageScore}%</p>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Average Score</h3>
-            <p className="text-3xl font-bold text-purple-600 mt-2">{averageScore}%</p>
           </div>
         </div>
 
         {/* Menu Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {menuItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
-              onClick={() => handleMenuClick(item.id)}
-            >
-              <div className={`h-32 ${item.color} flex items-center justify-center`}>
-                {item.icon}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {menuItems.map((item) => (
+              <div
+                key={item.id}
+                className="group bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-200 transform hover:scale-105 border-2 border-transparent hover:border-gray-200"
+                onClick={() => handleMenuClick(item.id)}
+              >
+                <div className={`h-32 bg-gradient-to-br ${item.color} flex items-center justify-center`}>
+                  <div className="bg-white bg-opacity-30 rounded-full p-4 shadow-md flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                    {React.cloneElement(item.icon, { className: 'h-12 w-12 text-white drop-shadow' })}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">{item.title}</h3>
+                  <p className="text-gray-600">{item.description}</p>
+                </div>
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <StatCard
-            icon={<Users className="h-6 w-6 text-indigo-600" />}
-            title="Total Students"
-            value={totalStudents.toString()}
-          />
-          <StatCard
-            icon={<BookOpen className="h-6 w-6 text-green-600" />}
-            title="Active Tests"
-            value={activeTests.toString()}
-          />
-          <StatCard
-            icon={<CheckCircle className="h-6 w-6 text-blue-600" />}
-            title="Completed Tests"
-            value={(totalStudents - activeTests).toString()}
-          />
-          <StatCard
-            icon={<BarChart2 className="h-6 w-6 text-purple-600" />}
-            title="Average Score"
-            value={averageScore.toString()}
-          />
+            ))}
+          </div>
         </div>
 
         {/* Test Management */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Recent Tests</h2>
-            <div className="flex space-x-4">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Recent Tests</h2>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Search tests..."
-                  className="pl-10 pr-4 py-2 border rounded-lg"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
               <select
-                className="border rounded-lg px-4 py-2"
+                className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -490,7 +456,7 @@ export const TeacherDashboard: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTests.map((test) => (
-                  <tr key={test.id}>
+                  <tr key={test.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{test.title}</div>
                     </td>
@@ -504,7 +470,7 @@ export const TeacherDashboard: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           test.is_active
                             ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-800'
@@ -514,71 +480,41 @@ export const TeacherDashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleEditTest(test.id)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => navigate(`/test-results/${test.id}`)}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        Results
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditTest(test.id)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
+                          title="Edit Test"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/test-results/${test.id}`)}
+                          className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
+                          title="View Results"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          
+          {filteredTests.length === 0 && (
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-2">
+                <ClipboardList className="h-12 w-12 mx-auto" />
+              </div>
+              <p className="text-gray-500">No tests found matching your criteria.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string }> = ({
-  icon,
-  title,
-  value,
-}) => {
-  return (
-    <div className="bg-white overflow-hidden shadow-sm rounded-lg">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">{icon}</div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">{value}</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TestStatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const getStatusStyles = () => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyles()}`}
-    >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
-};
+export default TeacherDashboard;

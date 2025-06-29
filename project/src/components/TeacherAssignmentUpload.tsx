@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import type { Subject } from '../services/api';
 import TeacherAssignmentList from './TeacherAssignmentList';
 import { useNavigate } from 'react-router-dom';
+import { notificationService } from '../services/notificationService';
 
 // Mock data for engineering subjects
 const engineeringSubjects: Subject[] = [
@@ -205,13 +206,23 @@ const TeacherAssignmentUpload: React.FC = () => {
       setError('');
       setMessage('Uploading assignment...');
       
-      await api.uploadAssignment(
+      const assignment = await api.uploadAssignment(
         selectedSubject,
         title,
         description,
         dueDate,
         file
       );
+
+      // Create notification for all students
+      const selectedSubjectData = subjects.find(s => s.id === selectedSubject);
+      if (selectedSubjectData) {
+        await notificationService.createAssignmentNotification(
+          assignment.id,
+          title,
+          selectedSubjectData.name
+        );
+      }
 
       setMessage('Assignment uploaded successfully!');
       // Reset form

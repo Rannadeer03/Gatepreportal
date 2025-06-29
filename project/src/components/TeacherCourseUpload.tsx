@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import type { CourseMaterial, Subject } from '../services/api';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { notificationService } from '../services/notificationService';
 
 const TeacherCourseUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -129,6 +130,16 @@ const TeacherCourseUpload: React.FC = () => {
 
       console.log('Upload successful:', response);
       setMessage('Course material uploaded successfully!');
+
+      // Create notification for all students
+      const selectedSubjectData = subjects.find(s => s.id === selectedSubject);
+      if (selectedSubjectData) {
+        await notificationService.createCourseMaterialNotification(
+          response.id,
+          title,
+          selectedSubjectData.name
+        );
+      }
 
       // Add the new material to the list
       setMaterials((prevMaterials) => [...prevMaterials, response]);
