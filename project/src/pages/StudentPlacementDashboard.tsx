@@ -60,7 +60,7 @@ export const StudentPlacementDashboard: React.FC = () => {
       id: 'placement-resources',
       title: 'Placement Resources',
       icon: <BookOpen className="h-8 w-8" />,
-      description: 'Study materials for placement preparation',
+      description: 'Study materials and PYQ questions for placement preparation',
       color: 'bg-indigo-500',
       action: () => navigate('/student/placement-resources')
     },

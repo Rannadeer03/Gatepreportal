@@ -28,8 +28,11 @@ import { TeacherMainDashboard } from './pages/TeacherMainDashboard';
 import { GatePreparationDashboard } from './pages/GatePreparationDashboard';
 import StudentAcademicDashboard from './pages/StudentAcademicDashboard';
 import StudentPlacementDashboard from './pages/StudentPlacementDashboard';
+import StudentPlacementResources from './pages/StudentPlacementResources';
 import StudentTestResults from './pages/StudentTestResults';
 import AssignmentReview from "./components/TeacherAssignmentList";
+import TeacherPlacementDashboard from './pages/TeacherPlacementDashboard';
+import TeacherPYQQuestions from './pages/TeacherPYQQuestions';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -81,8 +84,11 @@ const App: React.FC = () => {
             <Route path="/gate-preparation/progress" element={<GatePreparationDashboard />} />
             <Route path="/student-academic-dashboard" element={<StudentAcademicDashboard />} />
             <Route path="/student-placement-dashboard" element={<StudentPlacementDashboard />} />
+            <Route path="/student/placement-resources" element={<StudentPlacementResources />} />
             <Route path="/student-test-results" element={<StudentTestResults />} />
             <Route path="/teacher/assignment-review" element={<AssignmentReview />} />
+            <Route path="/teacher-placement-dashboard" element={<TeacherPlacementDashboard />} />
+            <Route path="/teacher/pyq-questions" element={<TeacherPYQQuestions />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
