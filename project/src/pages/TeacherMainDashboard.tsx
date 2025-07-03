@@ -46,7 +46,7 @@ export const TeacherMainDashboard: React.FC = () => {
           <div className="flex justify-center items-center py-4">
             <div className="bg-gradient-to-br from-blue-500 to-indigo-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full max-w-sm">
               <button
-                onClick={() => navigate('/teacher-dashboard')}
+                onClick={() => navigate('/academic/teacher-dashboard')}
                 className="flex flex-col items-center w-full px-6 py-6 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-blue-500 focus:outline-none"
               >
                 <GraduationCap className="h-10 w-10 text-blue-500 mb-3" />

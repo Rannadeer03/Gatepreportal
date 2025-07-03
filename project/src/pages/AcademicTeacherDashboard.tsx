@@ -1,103 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Users, 
-  BookOpen, 
-  CheckCircle, 
-  BarChart2, 
-  Plus, 
-  Search, 
-  Filter, 
-  Download,
   ClipboardList,
   FileText,
-  Calendar,
-  Settings,
-  GraduationCap,
-  Target,
-  Award,
-  Book,
+  BarChart2,
   PenTool,
+  Settings,
+  Book,
   ArrowLeft,
   Eye,
   Edit,
-  Trash2
+  Search
 } from 'lucide-react';
-import { api } from '../services/api';
-import { testService, Test } from '../services/supabaseApi';
-import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-
-const mockTests = [
-  {
-    id: '1',
-    name: 'Mid-term Electric Circuits',
-    subject: 'Electric Circuits',
-    dateCreated: '2024-03-20',
-    status: 'active',
-    studentsCompleted: 25,
-    totalStudents: 50,
-    averageScore: 76,
-    duration: 60,
-    questions: [
-      {
-        text: 'Calculate the current in a circuit with voltage 10V and resistance 5Ω',
-        options: ['1A', '2A', '3A', '4A'],
-        correctAnswer: 1,
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Engineering Mathematics Quiz',
-    subject: 'Engineering Mathematics',
-    dateCreated: '2024-03-18',
-    status: 'completed',
-    studentsCompleted: 45,
-    totalStudents: 45,
-    averageScore: 82,
-    duration: 90,
-    questions: [],
-  },
-  {
-    id: '3',
-    name: 'Power Systems Basics',
-    subject: 'Power Systems',
-    dateCreated: '2024-03-15',
-    status: 'draft',
-    studentsCompleted: 0,
-    totalStudents: 40,
-    averageScore: 0,
-    duration: 45,
-    questions: [],
-  },
-];
-
-const recentActivity = [
-  {
-    id: '1',
-    student: 'John Doe',
-    action: 'completed',
-    test: 'Mid-term Electric Circuits',
-    score: 85,
-    timestamp: '2024-03-21T10:30:00',
-  },
-  {
-    id: '2',
-    student: 'Jane Smith',
-    action: 'started',
-    test: 'Engineering Mathematics Quiz',
-    timestamp: '2024-03-21T10:15:00',
-  },
-  {
-    id: '3',
-    student: 'Mike Johnson',
-    action: 'completed',
-    test: 'Power Systems Basics',
-    score: 92,
-    timestamp: '2024-03-21T10:00:00',
-  },
-];
 
 interface TestData {
   id: string;
@@ -113,14 +29,9 @@ interface TeacherProfile {
   email: string;
 }
 
-interface TeacherDashboardProps {
-  mode?: 'academic' | 'gate';
-}
-
-export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate' }) => {
+const AcademicTeacherDashboard: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [tests, setTests] = useState<TestData[]>([]);
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [totalStudents, setTotalStudents] = useState(0);
@@ -133,13 +44,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
   const [showNewTestModal, setShowNewTestModal] = useState(false);
   const [showEditTestModal, setShowEditTestModal] = useState(false);
   const [selectedTest, setSelectedTest] = useState<any>(null);
-  const [recentActivities] = useState(recentActivity);
 
   const menuItems = [
     {
       id: 'tests',
       title: 'Test Management',
-      icon: <ClipboardList className="h-8 w-8" />,
+      icon: <ClipboardList className="h-8 w-8" />, 
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
@@ -148,7 +58,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
     {
       id: 'assignments',
       title: 'Assignments',
-      icon: <FileText className="h-8 w-8" />,
+      icon: <FileText className="h-8 w-8" />, 
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
@@ -157,7 +67,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
     {
       id: 'materials',
       title: 'Course Materials',
-      icon: <Book className="h-8 w-8" />,
+      icon: <Book className="h-8 w-8" />, 
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
@@ -166,7 +76,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
     {
       id: 'student-results',
       title: 'Student Results',
-      icon: <BarChart2 className="h-8 w-8" />,
+      icon: <BarChart2 className="h-8 w-8" />, 
       color: 'from-yellow-500 to-yellow-600',
       bgColor: 'bg-yellow-50',
       iconColor: 'text-yellow-600',
@@ -175,7 +85,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
     {
       id: 'grades',
       title: 'Assignment Review',
-      icon: <PenTool className="h-8 w-8" />,
+      icon: <PenTool className="h-8 w-8" />, 
       color: 'from-red-500 to-red-600',
       bgColor: 'bg-red-50',
       iconColor: 'text-red-600',
@@ -184,7 +94,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
     {
       id: 'settings',
       title: 'Settings',
-      icon: <Settings className="h-8 w-8" />,
+      icon: <Settings className="h-8 w-8" />, 
       color: 'from-gray-500 to-gray-600',
       bgColor: 'bg-gray-50',
       iconColor: 'text-gray-600',
@@ -195,35 +105,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
   const handleMenuClick = (id: string) => {
     setActiveMenu(id);
     if (id === 'tests') {
-      navigate('/teacher/test-management');
+      navigate('/academic/teacher/test-management');
     } else if (id === 'assignments') {
-      navigate('/teacher/assignments');
+      navigate('/academic/teacher/assignments');
     } else if (id === 'materials') {
-      navigate('/teacher/course-materials');
+      navigate('/academic/teacher/course-materials');
     } else if (id === 'student-results') {
-      navigate('/teacher/test-results');
+      navigate('/academic/teacher/test-results');
     } else if (id === 'grades') {
-      navigate('/teacher/assignment-review');
+      navigate('/academic/teacher/assignment-review');
     } else {
       console.log(`Clicked menu item: ${id}`);
     }
   };
-
-  useEffect(() => {
-    if (location.state?.test) {
-      if (location.state?.isEditing) {
-        // Update existing test
-        setTests((prevTests) =>
-          prevTests.map((test) =>
-            test.id === location.state.test.id ? location.state.test : test
-          )
-        );
-      } else {
-        // Add new test
-        setTests((prevTests) => [...prevTests, location.state.test]);
-      }
-    }
-  }, [location.state]);
 
   useEffect(() => {
     fetchTeacherData();
@@ -232,38 +126,32 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
   const fetchTeacherData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch teacher profile
+      // Fetch teacher profile (assume user is in localStorage/session)
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', userId)
         .single();
-
       if (profileData) {
         setTeacherProfile({
           id: profileData.id,
           name: profileData.full_name || 'Teacher',
-          email: profileData.email || user?.email || ''
+          email: profileData.email || ''
         });
       }
-
-      // Fetch tests from correct table
-      const testTable = mode === 'academic' ? 'academic_tests' : 'tests';
+      // Fetch tests from academic_tests
       const { data: testsData } = await supabase
-        .from(testTable)
+        .from('academic_tests')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (testsData) {
         setTests(testsData);
         setActiveTests(testsData.filter(test => test.is_active).length);
       }
-
-      // Mock data for stats
       setTotalStudents(156);
       setAverageScore(76);
-
     } catch (error) {
       console.error('Error fetching teacher data:', error);
     } finally {
@@ -335,19 +223,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/teacher-main-dashboard')}
+            onClick={() => navigate('/academic/teacher-main-dashboard')}
             className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors duration-200"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span className="text-base font-medium">Back to Main Dashboard</span>
           </button>
-          
           <div className="text-center">
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Teacher Dashboard</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Academic Teacher Dashboard</h1>
             <p className="text-lg text-gray-600">Welcome back, {teacherProfile?.name || 'Teacher'}! 👋</p>
           </div>
         </div>
-
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
@@ -361,7 +247,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
               </div>
             </div>
           </div>
-          
           <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center">
               <div className="bg-green-100 p-3 rounded-lg">
@@ -373,7 +258,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
               </div>
             </div>
           </div>
-          
           <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center">
               <div className="bg-purple-100 p-3 rounded-lg">
@@ -386,7 +270,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
             </div>
           </div>
         </div>
-
         {/* Menu Grid */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">Quick Actions</h2>
@@ -410,7 +293,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
             ))}
           </div>
         </div>
-
         {/* Test Management */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -437,7 +319,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
               </select>
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-gray-50">
@@ -494,7 +375,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => navigate(`/test-results/${test.id}`)}
+                          onClick={() => navigate(`/academic/teacher/test-results/${test.id}`)}
                           className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
                           title="View Results"
                         >
@@ -507,7 +388,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
               </tbody>
             </table>
           </div>
-          
           {filteredTests.length === 0 && (
             <div className="text-center py-8">
               <div className="text-gray-400 mb-2">
@@ -522,4 +402,4 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
   );
 };
 
-export default TeacherDashboard;
+export default AcademicTeacherDashboard; 

@@ -246,38 +246,35 @@ export const api = {
     title: string,
     description: string,
     dueDate: string,
-    file: File
+    file: File,
+    mode: 'academic' | 'gate' = 'gate'
   ): Promise<Assignment> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-
     // Validate file type
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type)) {
       throw new Error('Only PDF and Word documents are allowed');
     }
-
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > maxSize) {
       throw new Error('File size should not exceed 10MB');
     }
-
     try {
       // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
-
+      const bucket = mode === 'academic' ? 'academic_assignments' : 'assignments';
+      const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
       const { error: uploadError } = await supabase.storage
-        .from('assignments')
+        .from(bucket)
         .upload(filePath, file);
-
       if (uploadError) throw uploadError;
-
       // Create assignment record
       const { data, error } = await supabase
-        .from('assignments')
+        .from(table)
         .insert([{
           subject_id: subjectId,
           title,
@@ -286,12 +283,8 @@ export const api = {
           file_path: filePath,
           filename: file.name
         }])
-        .select(`
-          *,
-          subject:subjects(name, code)
-        `)
+        .select(`*, subject:subjects(name, code)`)
         .single();
-
       if (error) throw error;
       return data;
     } catch (error) {
@@ -300,11 +293,9 @@ export const api = {
     }
   },
 
-  async getAssignments() {
+  async getAssignments(mode: 'academic' | 'gate' = 'gate') {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-
-    // Step 1: Get all subject IDs for this teacher
     const { data: subjects, error: subjectsError } = await supabase
       .from('subjects')
       .select('id')
@@ -312,83 +303,67 @@ export const api = {
     if (subjectsError) throw subjectsError;
     const subjectIds = subjects.map((s: { id: string }) => s.id);
     if (subjectIds.length === 0) return [];
-
-    // Step 2: Get assignments for those subject IDs
+    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
     const { data: assignments, error: assignmentsError } = await supabase
-      .from('assignments')
+      .from(table)
       .select(`*, subject:subjects(name, code)`)
       .in('subject_id', subjectIds);
     if (assignmentsError) throw assignmentsError;
     return assignments;
   },
 
-  async getAssignmentsBySubject(subjectId: string) {
+  async getAssignmentsBySubject(subjectId: string, mode: 'academic' | 'gate' = 'gate') {
+    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
     const { data, error } = await supabase
-      .from('assignments')
-      .select(`
-        *,
-        subject:subjects(name, code)
-      `)
+      .from(table)
+      .select(`*, subject:subjects(name, code)`)
       .eq('subject_id', subjectId);
-
     if (error) throw error;
     return data;
   },
 
-  async deleteAssignment(assignmentId: string) {
+  async deleteAssignment(assignmentId: string, mode: 'academic' | 'gate' = 'gate') {
+    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
+    const bucket = mode === 'academic' ? 'academic_assignments' : 'assignments';
     // First get the assignment to get the file path
     const { data: assignment, error: fetchError } = await supabase
-      .from('assignments')
+      .from(table)
       .select('file_path')
       .eq('id', assignmentId)
       .single();
-
     if (fetchError) throw fetchError;
-
     // Delete the file from storage
     if (assignment?.file_path) {
       const { error: deleteFileError } = await supabase.storage
-        .from('assignments')
+        .from(bucket)
         .remove([assignment.file_path]);
-
       if (deleteFileError) throw deleteFileError;
     }
-
     // Delete the assignment record
     const { error } = await supabase
-      .from('assignments')
+      .from(table)
       .delete()
       .eq('id', assignmentId);
-
     if (error) throw error;
     return { success: true };
   },
 
   // Student Assignment Views
-  async getStudentAssignments() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
+  async getStudentAssignments(mode: 'academic' | 'gate' = 'gate') {
+    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
     const { data, error } = await supabase
-      .from('assignments')
-      .select(`
-        *,
-        subject:subjects(name, code)
-      `);
-
+      .from(table)
+      .select(`*, subject:subjects(name, code)`);
     if (error) throw error;
     return data;
   },
 
-  async getStudentAssignmentsBySubject(subjectId: string) {
+  async getStudentAssignmentsBySubject(subjectId: string, mode: 'academic' | 'gate' = 'gate') {
+    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
     const { data, error } = await supabase
-      .from('assignments')
-      .select(`
-        *,
-        subject:subjects(name, code)
-      `)
+      .from(table)
+      .select(`*, subject:subjects(name, code)`)
       .eq('subject_id', subjectId);
-
     if (error) throw error;
     return data;
   },
@@ -434,7 +409,8 @@ export const api = {
     title: string,
     description: string,
     materialType: string,
-    file: File
+    file: File,
+    mode: 'academic' | 'gate' = 'gate'
   ): Promise<CourseMaterial> {
     // Validate file type
     const allowedTypes = [
@@ -446,17 +422,14 @@ export const api = {
       'video/mp4',
       'video/webm'
     ];
-
     if (!allowedTypes.includes(file.type)) {
       throw new Error('Only PDF, Word, PowerPoint, and video files are allowed');
     }
-
     // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024; // 100MB in bytes
     if (file.size > maxSize) {
       throw new Error('File size should not exceed 100MB');
     }
-
     try {
       // Get subject details
       const { data: subject, error: subjectError } = await supabase
@@ -464,26 +437,23 @@ export const api = {
         .select('name, code')
         .eq('id', subject_id)
         .single();
-
       if (subjectError) throw subjectError;
-
       // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `course_materials/${fileName}`;
-
+      const bucket = mode === 'academic' ? 'academic_course_materials' : 'course_materials';
+      const table = mode === 'academic' ? 'academic_course_materials' : 'course_materials';
+      const filePath = `${bucket}/${fileName}`;
       const { error: uploadError } = await supabase.storage
-        .from('course_materials')
+        .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
-
       if (uploadError) throw uploadError;
-
       // Create course material record
       const { data: material, error: insertError } = await supabase
-        .from('course_materials')
+        .from(table)
         .insert([{
           subject_id,
           title,
@@ -498,9 +468,7 @@ export const api = {
         }])
         .select()
         .single();
-
       if (insertError) throw insertError;
-
       return material;
     } catch (error) {
       console.error('Upload error:', error);
@@ -508,12 +476,12 @@ export const api = {
     }
   },
 
-  async getCourseMaterialsBySubject(subject_id: string): Promise<CourseMaterial[]> {
+  async getCourseMaterialsBySubject(subject_id: string, mode: 'academic' | 'gate' = 'gate'): Promise<CourseMaterial[]> {
+    const table = mode === 'academic' ? 'academic_course_materials' : 'course_materials';
     const { data, error } = await supabase
-      .from('course_materials')
+      .from(table)
       .select('*')
       .eq('subject_id', subject_id);
-
     if (error) throw error;
     return data;
   },
@@ -537,31 +505,28 @@ export const api = {
     return data;
   },
 
-  async deleteCourseMaterial(materialId: string): Promise<void> {
+  async deleteCourseMaterial(materialId: string, mode: 'academic' | 'gate' = 'gate'): Promise<void> {
+    const table = mode === 'academic' ? 'academic_course_materials' : 'course_materials';
+    const bucket = mode === 'academic' ? 'academic_course_materials' : 'course_materials';
     // First get the material to get the file path
     const { data: material, error: fetchError } = await supabase
-      .from('course_materials')
+      .from(table)
       .select('path')
       .eq('id', materialId)
       .single();
-
     if (fetchError) throw fetchError;
-
     // Delete the file from storage
     if (material?.path) {
       const { error: deleteFileError } = await supabase.storage
-        .from('course_materials')
+        .from(bucket)
         .remove([material.path]);
-
       if (deleteFileError) throw deleteFileError;
     }
-
     // Delete the material record
     const { error } = await supabase
-      .from('course_materials')
+      .from(table)
       .delete()
       .eq('id', materialId);
-
     if (error) throw error;
   },
 
@@ -594,16 +559,15 @@ export const api = {
   },
 
   // New function to get ALL assignments for teacher review
-  async getAllAssignmentsForTeacher() {
+  async getAllAssignmentsForTeacher(mode: 'academic' | 'gate' = 'gate') {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-
+    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
     // Get all assignments with subject information
     const { data: assignments, error: assignmentsError } = await supabase
-      .from('assignments')
+      .from(table)
       .select(`*, subject:subjects(name, code)`)
       .order('created_at', { ascending: false });
-    
     if (assignmentsError) throw assignmentsError;
     return assignments || [];
   },

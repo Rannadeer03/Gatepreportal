@@ -33,6 +33,14 @@ import StudentTestResults from './pages/StudentTestResults';
 import AssignmentReview from "./components/TeacherAssignmentList";
 import TeacherPlacementDashboard from './pages/TeacherPlacementDashboard';
 import TeacherPYQQuestions from './pages/TeacherPYQQuestions';
+import AcademicTeacherMainDashboard from './pages/AcademicTeacherMainDashboard';
+import AcademicTeacherDashboard from './pages/AcademicTeacherDashboard';
+import AcademicTestManagement from './pages/AcademicTestManagement';
+import AcademicTestResults from './pages/AcademicTestResults';
+import AcademicTeacherAssignmentUpload from './components/AcademicTeacherAssignmentUpload';
+import AcademicTeacherCourseUpload from './components/AcademicTeacherCourseUpload';
+import AcademicTeacherAssignmentList from './components/AcademicTeacherAssignmentList';
+import AcademicCreateTestPage from './pages/AcademicCreateTestPage';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -63,7 +71,8 @@ const App: React.FC = () => {
             <Route path="/create-profile" element={<CreateProfile />} />
             <Route path="/student-dashboard" element={<NewStudentDashboard />} />
             <Route path="/student-main-dashboard" element={<StudentMainDashboard />} />
-            <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+            <Route path="/teacher-dashboard" element={<TeacherDashboard mode="academic" />} />
+            <Route path="/gate-teacher-dashboard" element={<TeacherDashboard mode="gate" />} />
             <Route path="/teacher-main-dashboard" element={<TeacherMainDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/study-materials" element={<StudyMaterials />} />
@@ -89,6 +98,14 @@ const App: React.FC = () => {
             <Route path="/teacher/assignment-review" element={<AssignmentReview />} />
             <Route path="/teacher-placement-dashboard" element={<TeacherPlacementDashboard />} />
             <Route path="/teacher/pyq-questions" element={<TeacherPYQQuestions />} />
+            <Route path="/academic/teacher-dashboard" element={<AcademicTeacherDashboard />} />
+            <Route path="/academic/teacher-main-dashboard" element={<AcademicTeacherMainDashboard />} />
+            <Route path="/academic/teacher/test-management" element={<AcademicTestManagement />} />
+            <Route path="/academic/teacher/test-results" element={<AcademicTestResults />} />
+            <Route path="/academic/teacher/assignments" element={<AcademicTeacherAssignmentUpload />} />
+            <Route path="/academic/teacher/course-materials" element={<AcademicTeacherCourseUpload />} />
+            <Route path="/academic/teacher/assignment-review" element={<AcademicTeacherAssignmentList />} />
+            <Route path="/academic/create-test" element={<AcademicCreateTestPage />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

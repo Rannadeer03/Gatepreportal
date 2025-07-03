@@ -3,11 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
 
-export const CreateTestButton: React.FC = () => {
+interface CreateTestButtonProps {
+  mode?: 'academic' | 'gate';
+}
+
+export const CreateTestButton: React.FC<CreateTestButtonProps> = ({ mode = 'gate' }) => {
   const navigate = useNavigate();
 
   const handleCreateTest = () => {
-    navigate('/create-test');
+    if (mode === 'academic') {
+      navigate('/academic/create-test');
+    } else {
+      navigate('/create-test');
+    }
   };
 
   return (
@@ -19,4 +27,6 @@ export const CreateTestButton: React.FC = () => {
       Create New Test
     </Button>
   );
-}; 
+};
+
+export default CreateTestButton; 

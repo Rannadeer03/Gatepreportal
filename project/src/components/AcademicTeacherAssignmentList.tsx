@@ -1,26 +1,13 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { api } from '../services/api';
 import type { Assignment } from '../services/api';
-import { 
-  FileText, 
-  Download, 
-  Trash2, 
-  Calendar, 
-  BookOpen, 
-  Users, 
-  CheckCircle, 
-  Clock, 
-  Star,
-  MessageSquare,
-  Eye,
-  ArrowLeft
-} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
 import { notificationService } from '../services/notificationService';
+import { ArrowLeft, FileText, Eye, Download, Trash2, Calendar, Users, CheckCircle, Star, MessageSquare } from 'lucide-react';
 
 export interface TeacherAssignmentListRef {
   fetchAssignments: () => Promise<void>;
@@ -43,11 +30,7 @@ interface StudentSubmission {
   };
 }
 
-interface TeacherAssignmentListProps {
-  mode?: 'academic' | 'gate';
-}
-
-const AssignmentReview = forwardRef<TeacherAssignmentListRef, TeacherAssignmentListProps>(({ mode = 'gate' }, ref) => {
+const AcademicTeacherAssignmentList = forwardRef<TeacherAssignmentListRef, any>((props, ref) => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Record<string, StudentSubmission[]>>({});
   const [loading, setLoading] = useState(true);
@@ -61,13 +44,10 @@ const AssignmentReview = forwardRef<TeacherAssignmentListRef, TeacherAssignmentL
 
   const fetchAssignments = async () => {
     try {
-      console.log('Fetching assignments for teacher...');
-      const data = await api.getAllAssignmentsForTeacher(mode);
-      console.log('Assignments fetched:', data);
+      const data = await api.getAllAssignmentsForTeacher('academic');
       setAssignments(data);
       await fetchSubmissions(data);
     } catch (err) {
-      console.error('Error fetching assignments:', err);
       setError('Failed to fetch assignments. Please try again later.');
     } finally {
       setLoading(false);
@@ -76,33 +56,16 @@ const AssignmentReview = forwardRef<TeacherAssignmentListRef, TeacherAssignmentL
 
   const fetchSubmissions = async (assignmentsData: Assignment[]) => {
     try {
-      console.log('Fetching submissions for assignments:', assignmentsData.length);
-      
       if (assignmentsData.length === 0) {
-        console.log('No assignments to fetch submissions for');
         setSubmissions({});
         return;
       }
-      
       const assignmentIds = assignmentsData.map(a => a.id);
-      console.log('Assignment IDs:', assignmentIds);
-      
-      const table = mode === 'academic' ? 'academic_assignment_submissions' : 'assignment_submissions';
       const { data, error } = await supabase
-        .from(table)
-        .select(`
-          *,
-          student:profiles(email, name)
-        `)
+        .from('academic_assignment_submissions')
+        .select(`*, student:profiles(email, name)`)
         .in('assignment_id', assignmentIds);
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Submissions fetched:', data);
-
+      if (error) throw error;
       const submissionsMap: Record<string, StudentSubmission[]> = {};
       (data || []).forEach((submission: any) => {
         if (!submissionsMap[submission.assignment_id]) {
@@ -110,60 +73,25 @@ const AssignmentReview = forwardRef<TeacherAssignmentListRef, TeacherAssignmentL
         }
         submissionsMap[submission.assignment_id].push(submission);
       });
-
-      console.log('Submissions map:', submissionsMap);
       setSubmissions(submissionsMap);
     } catch (err) {
-      console.error('Error fetching submissions:', err);
-      // Don't throw error, just log it and continue
       setSubmissions({});
     }
   };
 
-  useImperativeHandle(ref, () => ({
-    fetchAssignments
-  }));
+  useImperativeHandle(ref, () => ({ fetchAssignments }));
 
-  useEffect(() => {
-    fetchAssignments();
-    testTableAccess();
-  }, []);
-
-  const testTableAccess = async () => {
-    try {
-      console.log('Testing assignment_submissions table access...');
-      const { data, error } = await supabase
-        .from('assignment_submissions')
-        .select('count')
-        .limit(1);
-      
-      if (error) {
-        console.error('Table access error:', error);
-      } else {
-        console.log('Table access successful, data:', data);
-      }
-    } catch (err) {
-      console.error('Table test error:', err);
-    }
-  };
+  useEffect(() => { fetchAssignments(); }, []);
 
   const handleDelete = async (assignmentId: string) => {
     if (window.confirm('Are you sure you want to delete this assignment?')) {
       try {
-        await api.deleteAssignment(assignmentId);
+        await api.deleteAssignment(assignmentId, 'academic');
         setAssignments(assignments.filter(a => a.id !== assignmentId));
-        toast({
-          title: 'Success',
-          description: 'Assignment deleted successfully'
-        });
+        toast({ title: 'Success', description: 'Assignment deleted successfully' });
       } catch (err) {
-        console.error('Delete error:', err);
         setError('Failed to delete assignment. Please try again.');
-        toast({
-          title: 'Error',
-          description: 'Failed to delete assignment',
-          variant: 'destructive'
-        });
+        toast({ title: 'Error', description: 'Failed to delete assignment', variant: 'destructive' });
       }
     }
   };
@@ -171,118 +99,25 @@ const AssignmentReview = forwardRef<TeacherAssignmentListRef, TeacherAssignmentL
   const handleDownloadSubmission = async (submission: StudentSubmission) => {
     try {
       const { data: { publicUrl } } = supabase.storage
-        .from('student-assignments')
+        .from('academic_assignment_submissions')
         .getPublicUrl(submission.file_path);
-
       const link = document.createElement('a');
       link.href = publicUrl;
       link.download = submission.filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      toast({
-        title: 'Success',
-        description: 'Submission downloaded successfully'
-      });
+      toast({ title: 'Success', description: 'Submission downloaded successfully' });
     } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to download submission',
-        variant: 'destructive'
-      });
+      toast({ title: 'Error', description: 'Failed to download submission', variant: 'destructive' });
     }
   };
 
   const handleViewSubmission = (submission: StudentSubmission) => {
     const { data: { publicUrl } } = supabase.storage
-      .from('student-assignments')
+      .from('academic_assignment_submissions')
       .getPublicUrl(submission.file_path);
-    
     window.open(publicUrl, '_blank');
-  };
-
-  const handleGradeSubmission = async (submissionId: string) => {
-    const grade = grades[submissionId];
-    const feedbackText = feedback[submissionId];
-
-    console.log('Grading submission:', submissionId);
-    console.log('Grade:', grade);
-    console.log('Feedback:', feedbackText);
-
-    if (!grade || grade < 0 || grade > 100) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a valid grade (0-100)',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setGrading(prev => ({ ...prev, [submissionId]: true }));
-
-    try {
-      console.log('Updating submission in database...');
-      const { data, error } = await supabase
-        .from('assignment_submissions')
-        .update({
-          status: 'graded',
-          grade: grade,
-          feedback: feedbackText,
-          graded_at: new Date().toISOString()
-        })
-        .eq('id', submissionId)
-        .select();
-
-      console.log('Database response:', { data, error });
-
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
-      }
-
-      console.log('Successfully updated submission:', data);
-
-      // Find the submission and assignment details for notification
-      const submission = Object.values(submissions).flat().find(s => s.id === submissionId);
-      const assignment = assignments.find(a => a.id === submission?.assignment_id);
-      
-      // Create notification for the student
-      if (submission && assignment) {
-        await notificationService.createGradeNotification(
-          submission.student_id,
-          assignment.title,
-          grade
-        );
-      }
-
-      // Update local state
-      setSubmissions(prev => {
-        const newSubmissions = { ...prev };
-        Object.keys(newSubmissions).forEach(assignmentId => {
-          newSubmissions[assignmentId] = newSubmissions[assignmentId].map(sub => 
-            sub.id === submissionId 
-              ? { ...sub, status: 'graded', grade, feedback: feedbackText, graded_at: new Date().toISOString() }
-              : sub
-          );
-        });
-        return newSubmissions;
-      });
-
-      toast({
-        title: 'Success',
-        description: 'Submission graded successfully'
-      });
-    } catch (err) {
-      console.error('Error grading submission:', err);
-      toast({
-        title: 'Error',
-        description: 'Failed to grade submission',
-        variant: 'destructive'
-      });
-    } finally {
-      setGrading(prev => ({ ...prev, [submissionId]: false }));
-    }
   };
 
   // Group assignments by subject
@@ -556,4 +391,4 @@ const AssignmentReview = forwardRef<TeacherAssignmentListRef, TeacherAssignmentL
   );
 });
 
-export default AssignmentReview; 
+export default AcademicTeacherAssignmentList; 
