@@ -170,10 +170,11 @@ export const api = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
+    // Get subjects assigned to this teacher OR subjects without teacher_id (available to all teachers)
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
-      .eq('teacher_id', user.id);
+      .or(`teacher_id.eq.${user.id},teacher_id.is.null`);
 
     if (error) throw error;
     return data;
@@ -264,15 +265,28 @@ export const api = {
     try {
       // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const fileName = `${timestamp}_${randomId}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
       const bucket = mode === 'academic' ? 'academic_assignments' : 'assignments';
       const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
+      
+      console.log('Uploading to bucket:', bucket);
+      console.log('File path:', filePath);
+      
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file);
-      if (uploadError) throw uploadError;
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
       // Create assignment record
+      console.log('Creating assignment record in table:', table);
       const { data, error } = await supabase
         .from(table)
         .insert([{
@@ -285,7 +299,10 @@ export const api = {
         }])
         .select(`*, subject:subjects(name, code)`)
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error('Database insertion error:', error);
+        throw error;
+      }
       return data;
     } catch (error) {
       console.error('Upload error:', error);
@@ -296,13 +313,21 @@ export const api = {
   async getAssignments(mode: 'academic' | 'gate' = 'gate') {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-    const { data: subjects, error: subjectsError } = await supabase
+    
+    // Get subjects assigned to this teacher OR subjects without teacher_id (available to all teachers)
+    const { data: teacherSubjects, error: teacherSubjectsError } = await supabase
       .from('subjects')
       .select('id')
-      .eq('teacher_id', user.id);
-    if (subjectsError) throw subjectsError;
-    const subjectIds = subjects.map((s: { id: string }) => s.id);
+      .or(`teacher_id.eq.${user.id},teacher_id.is.null`);
+    
+    if (teacherSubjectsError) {
+      console.error('Error fetching teacher subjects:', teacherSubjectsError);
+      throw teacherSubjectsError;
+    }
+    
+    const subjectIds = teacherSubjects.map((s: { id: string }) => s.id);
     if (subjectIds.length === 0) return [];
+    
     const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
     const { data: assignments, error: assignmentsError } = await supabase
       .from(table)

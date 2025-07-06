@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
 import { notificationService } from '../services/notificationService';
-import { ArrowLeft, FileText, Eye, Download, Trash2, Calendar, Users, CheckCircle, Star, MessageSquare } from 'lucide-react';
+import { ArrowLeft, FileText, Eye, Download, Trash2, Calendar, Users, CheckCircle, Star, MessageSquare, BookOpen, Clock } from 'lucide-react';
 
 export interface TeacherAssignmentListRef {
   fetchAssignments: () => Promise<void>;
@@ -118,6 +118,79 @@ const AcademicTeacherAssignmentList = forwardRef<TeacherAssignmentListRef, any>(
       .from('academic_assignment_submissions')
       .getPublicUrl(submission.file_path);
     window.open(publicUrl, '_blank');
+  };
+
+  const handleGradeSubmission = async (submissionId: string) => {
+    try {
+      setGrading(prev => ({ ...prev, [submissionId]: true }));
+      
+      const grade = grades[submissionId];
+      const feedbackText = feedback[submissionId];
+      
+      if (grade === undefined || grade < 0 || grade > 100) {
+        toast({ 
+          title: 'Error', 
+          description: 'Please enter a valid grade between 0 and 100', 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('academic_assignment_submissions')
+        .update({
+          status: 'graded',
+          grade: grade,
+          feedback: feedbackText,
+          graded_at: new Date().toISOString()
+        })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      // Update local state
+      setSubmissions(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(assignmentId => {
+          updated[assignmentId] = updated[assignmentId].map(submission => 
+            submission.id === submissionId 
+              ? { 
+                  ...submission, 
+                  status: 'graded', 
+                  grade, 
+                  feedback: feedbackText, 
+                  graded_at: new Date().toISOString() 
+                }
+              : submission
+          );
+        });
+        return updated;
+      });
+
+      // Clear form data
+      setGrades(prev => {
+        const { [submissionId]: _, ...rest } = prev;
+        return rest;
+      });
+      setFeedback(prev => {
+        const { [submissionId]: _, ...rest } = prev;
+        return rest;
+      });
+
+      toast({ 
+        title: 'Success', 
+        description: 'Submission graded successfully' 
+      });
+    } catch (error) {
+      console.error('Error grading submission:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to grade submission. Please try again.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setGrading(prev => ({ ...prev, [submissionId]: false }));
+    }
   };
 
   // Group assignments by subject

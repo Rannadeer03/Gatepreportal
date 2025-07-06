@@ -88,21 +88,64 @@ const AcademicCreateTestPage: React.FC = () => {
 
   const uploadImageToStorage = async (file: File, type: 'question' | 'option'): Promise<string> => {
     try {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Only JPEG, PNG, GIF, and WebP images are allowed');
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        throw new Error('Image size should not exceed 5MB');
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${type}/${fileName}`;
-      const { error: uploadError, data } = await supabase.storage
-        .from('academic-test-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage
-        .from('academic-test-images')
-        .getPublicUrl(filePath);
-      return publicUrl;
+      
+      // Try different bucket names in order of preference
+      const bucketNames = ['academic_test_images', 'test-images', 'avatars', 'images', 'uploads'];
+      let lastError = null;
+      
+      for (const bucketName of bucketNames) {
+        try {
+          console.log(`Trying to upload to bucket: ${bucketName}`);
+          
+          const { error: uploadError, data } = await supabase.storage
+            .from(bucketName)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (uploadError) {
+            console.error(`Upload error for bucket ${bucketName}:`, uploadError);
+            lastError = uploadError;
+            continue; // Try next bucket
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(filePath);
+          
+          console.log(`Successfully uploaded to bucket: ${bucketName}`);
+          return publicUrl;
+        } catch (bucketError) {
+          console.error(`Error with bucket ${bucketName}:`, bucketError);
+          lastError = bucketError;
+          continue; // Try next bucket
+        }
+      }
+      
+      // If we get here, all buckets failed
+      console.error('All bucket attempts failed:', lastError);
+      throw new Error('No available storage bucket found. Please create a storage bucket in your Supabase project.');
     } catch (error) {
+      console.error('Image upload error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error('Failed to upload image');
     }
   };
@@ -111,11 +154,15 @@ const AcademicCreateTestPage: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       try {
+        setError(null);
         const imageUrl = await uploadImageToStorage(file, 'option');
         const newOptions = [...currentQuestion.options];
         newOptions[index] = `[IMG]${imageUrl}`;
         setCurrentQuestion({ ...currentQuestion, options: newOptions });
-      } catch (error) {}
+      } catch (error) {
+        console.error('Option image upload error:', error);
+        setError(error instanceof Error ? error.message : 'Failed to upload option image');
+      }
     }
   };
 
@@ -123,12 +170,16 @@ const AcademicCreateTestPage: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       try {
+        setError(null);
         const imageUrl = await uploadImageToStorage(file, 'question');
         setCurrentQuestion({
           ...currentQuestion,
           image_url: imageUrl
         });
-      } catch (error) {}
+      } catch (error) {
+        console.error('Question image upload error:', error);
+        setError(error instanceof Error ? error.message : 'Failed to upload question image');
+      }
     }
   };
 
