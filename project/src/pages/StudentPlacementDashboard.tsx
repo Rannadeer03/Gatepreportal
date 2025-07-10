@@ -1,281 +1,125 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Briefcase, 
-  FileText, 
-  Users, 
-  Calendar, 
-  ArrowLeft,
-  Building,
+import {
+  FileText,
   MessageSquare,
-  Award,
-  TrendingUp,
+  Building,
+  Calendar,
   BookOpen,
-  Video,
   Target,
+  Video,
   CheckCircle,
-  Clock,
-  Star
+  ArrowLeft
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
-export const StudentPlacementDashboard: React.FC = () => {
+const placementOptions = [
+  {
+    id: 'resume-builder',
+    title: 'Resume Builder',
+    icon: <FileText className="h-10 w-10 text-blue-500 mb-3" />,
+    description: 'Create and update your professional resume',
+    color: 'bg-[#3B82F6]/10',
+    action: (navigate: any) => navigate('/student/resume-builder'),
+  },
+  {
+    id: 'interview-prep',
+    title: 'Interview Preparation',
+    icon: <MessageSquare className="h-10 w-10 text-green-500 mb-3" />,
+    description: 'Practice interviews and get feedback',
+    color: 'bg-[#22C55E]/10',
+    action: (navigate: any) => navigate('/student/interview-prep'),
+  },
+  {
+    id: 'company-profiles',
+    title: 'Company Profiles',
+    icon: <Building className="h-10 w-10 text-purple-500 mb-3" />,
+    description: 'Explore companies and their requirements',
+    color: 'bg-[#A78BFA]/10',
+    action: (navigate: any) => navigate('/student/company-profiles'),
+  },
+  {
+    id: 'placement-calendar',
+    title: 'Placement Calendar',
+    icon: <Calendar className="h-10 w-10 text-yellow-500 mb-3" />,
+    description: 'Important placement dates and deadlines',
+    color: 'bg-[#F59E42]/10',
+    action: (navigate: any) => navigate('/student/placement-calendar'),
+  },
+  {
+    id: 'placement-resources',
+    title: 'Placement Resources',
+    icon: <BookOpen className="h-10 w-10 text-indigo-500 mb-3" />,
+    description: 'Study materials and PYQ questions for placement preparation',
+    color: 'bg-[#6366F1]/10',
+    action: (navigate: any) => navigate('/student/placement-resources'),
+  },
+  {
+    id: 'mock-tests',
+    title: 'Mock Tests',
+    icon: <Target className="h-10 w-10 text-teal-500 mb-3" />,
+    description: 'Practice placement aptitude tests',
+    color: 'bg-[#14B8A6]/10',
+    action: (navigate: any) => navigate('/student/mock-tests'),
+  },
+  {
+    id: 'video-tutorials',
+    title: 'Video Tutorials',
+    icon: <Video className="h-10 w-10 text-orange-500 mb-3" />,
+    description: 'Learn from expert placement videos',
+    color: 'bg-[#F59E42]/10',
+    action: (navigate: any) => navigate('/student/video-tutorials'),
+  },
+  {
+    id: 'placement-status',
+    title: 'Placement Status',
+    icon: <CheckCircle className="h-10 w-10 text-pink-500 mb-3" />,
+    description: 'Track your placement applications',
+    color: 'bg-[#EC4899]/10',
+    action: (navigate: any) => navigate('/student/placement-status'),
+  },
+];
+
+const StudentPlacementDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  const placementFeatures = [
-    {
-      id: 'resume-builder',
-      title: 'Resume Builder',
-      icon: <FileText className="h-8 w-8" />,
-      description: 'Create and update your professional resume',
-      color: 'bg-blue-500',
-      action: () => navigate('/student/resume-builder')
-    },
-    {
-      id: 'interview-prep',
-      title: 'Interview Preparation',
-      icon: <MessageSquare className="h-8 w-8" />,
-      description: 'Practice interviews and get feedback',
-      color: 'bg-green-500',
-      action: () => navigate('/student/interview-prep')
-    },
-    {
-      id: 'company-profiles',
-      title: 'Company Profiles',
-      icon: <Building className="h-8 w-8" />,
-      description: 'Explore companies and their requirements',
-      color: 'bg-purple-500',
-      action: () => navigate('/student/company-profiles')
-    },
-    {
-      id: 'placement-calendar',
-      title: 'Placement Calendar',
-      icon: <Calendar className="h-8 w-8" />,
-      description: 'Important placement dates and deadlines',
-      color: 'bg-yellow-500',
-      action: () => navigate('/student/placement-calendar')
-    },
-    {
-      id: 'placement-resources',
-      title: 'Placement Resources',
-      icon: <BookOpen className="h-8 w-8" />,
-      description: 'Study materials and PYQ questions for placement preparation',
-      color: 'bg-indigo-500',
-      action: () => navigate('/student/placement-resources')
-    },
-    {
-      id: 'mock-tests',
-      title: 'Mock Tests',
-      icon: <Target className="h-8 w-8" />,
-      description: 'Practice placement aptitude tests',
-      color: 'bg-teal-500',
-      action: () => navigate('/student/mock-tests')
-    },
-    {
-      id: 'video-tutorials',
-      title: 'Video Tutorials',
-      icon: <Video className="h-8 w-8" />,
-      description: 'Learn from expert placement videos',
-      color: 'bg-orange-500',
-      action: () => navigate('/student/video-tutorials')
-    },
-    {
-      id: 'placement-status',
-      title: 'Placement Status',
-      icon: <CheckCircle className="h-8 w-8" />,
-      description: 'Track your placement applications',
-      color: 'bg-pink-500',
-      action: () => navigate('/student/placement-status')
-    }
-  ];
-
-  const renderFeatures = () => {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {placementFeatures.map((feature) => (
-          <div
-            key={feature.id}
-            onClick={feature.action}
-            className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-          >
-            <div className="flex items-center mb-4">
-              <div className={`${feature.color} p-3 rounded-lg text-white`}>
-                {feature.icon}
-              </div>
-              <h3 className="ml-3 text-lg font-semibold text-gray-900">{feature.title}</h3>
-            </div>
-            <p className="text-gray-600 text-sm">{feature.description}</p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/student-main-dashboard')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back to Dashboard
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Placement Preparation Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.email}</p>
-        </div>
-
-        {/* Placement Features */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Placement Resources</h2>
-          {renderFeatures()}
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <Building className="h-6 w-6 text-blue-600" />
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/student-main-dashboard')}
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
+        >
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          <span className="text-base font-medium">Back to Student Dashboard</span>
+        </button>
+        {/* Placement Dashboard Heading */}
+        <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-4">Placement Preparation Dashboard</h1>
+        <p className="text-lg text-gray-600 text-center mb-10">
+          Access all your placement resources, mock tests, and progress tools in one place.
+        </p>
+        {/* Placement Options Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+          {placementOptions.map((option) => (
+            <div
+              key={option.id}
+              className="bg-white rounded-2xl shadow-md p-8 flex flex-col items-center cursor-pointer hover:shadow-lg transition-all border border-gray-100 hover:border-gray-200"
+              onClick={() => option.action(navigate)}
+            >
+              <div className={`w-16 h-16 flex items-center justify-center mb-3 ${option.color} rounded-lg`}>
+                {option.icon}
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Companies Applied</p>
-                <p className="text-2xl font-semibold text-gray-900">12</p>
-              </div>
+              <span className="text-lg font-bold text-gray-900 mb-1 text-center">{option.title}</span>
+              <span className="text-base text-gray-600 text-center">{option.description}</span>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-green-100 p-3 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Interviews</p>
-                <p className="text-2xl font-semibold text-gray-900">8</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <Award className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Offers</p>
-                <p className="text-2xl font-semibold text-gray-900">3</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-orange-100 p-3 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Success Rate</p>
-                <p className="text-2xl font-semibold text-gray-900">75%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Upcoming Placements */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">Upcoming Placement Drives</h3>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="bg-blue-100 p-2 rounded-lg mr-4">
-                    <Building className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Google - Software Engineer</p>
-                    <p className="text-sm text-gray-500">Campus Drive</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">Dec 15, 2024</p>
-                  <p className="text-sm text-gray-500">2 days left</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="bg-green-100 p-2 rounded-lg mr-4">
-                    <Building className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Microsoft - Data Scientist</p>
-                    <p className="text-sm text-gray-500">Off-campus Drive</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">Dec 20, 2024</p>
-                  <p className="text-sm text-gray-500">7 days left</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="bg-purple-100 p-2 rounded-lg mr-4">
-                    <Building className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Amazon - Full Stack Developer</p>
-                    <p className="text-sm text-gray-500">Campus Drive</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">Dec 25, 2024</p>
-                  <p className="text-sm text-gray-500">12 days left</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Placement Activity</h3>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="bg-blue-100 p-2 rounded-lg mr-4">
-                  <FileText className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Updated Resume for Google Drive</p>
-                  <p className="text-sm text-gray-500">1 hour ago</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="bg-green-100 p-2 rounded-lg mr-4">
-                  <MessageSquare className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Completed Mock Interview - Microsoft</p>
-                  <p className="text-sm text-gray-500">3 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="bg-purple-100 p-2 rounded-lg mr-4">
-                  <Target className="h-4 w-4 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Scored 85% in Aptitude Test</p>
-                  <p className="text-sm text-gray-500">1 day ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
+      <footer className="w-full text-center py-6 text-gray-400 text-sm">
+        Made with <span className="text-pink-500">♥</span> by MockTest Pro Team
+      </footer>
     </div>
   );
 };
