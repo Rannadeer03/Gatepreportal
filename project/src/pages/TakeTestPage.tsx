@@ -60,7 +60,7 @@ const TakeTestPage: React.FC = () => {
 
       // Fetch test details
       const { data: testData, error: testError } = await supabase
-        .from('tests')
+        .from('academic_tests')
         .select('*')
         .eq('id', testId)
         .single();
