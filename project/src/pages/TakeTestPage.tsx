@@ -70,9 +70,9 @@ const TakeTestPage: React.FC = () => {
       if (testError) throw testError;
       setTest(testData);
 
-      // Fetch question IDs from test_questions first
+      // Fetch question IDs from academic_test_questions first
       const { data: testQuestionIdsData, error: testQuestionIdsError } = await supabase
-        .from('test_questions')
+        .from('academic_test_questions')
         .select('question_id')
         .eq('test_id', testId)
         .order('question_order');
@@ -83,9 +83,9 @@ const TakeTestPage: React.FC = () => {
 
       const questionIds = testQuestionIdsData.map((q: any) => q.question_id);
 
-      // Now fetch the actual question details using the IDs
+      // Now fetch the actual question details using the IDs from academic_questions
       const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
+        .from('academic_questions')
         .select('id, question_text, type, options, correct_option, image_url, explanation')
         .in('id', questionIds);
 
@@ -96,7 +96,7 @@ const TakeTestPage: React.FC = () => {
 
       // Check if test result exists
       const { data: resultData, error: resultError } = await supabase
-        .from('test_results')
+        .from('academic_test_results')
         .select('*')
         .eq('test_id', testId)
         .eq('student_id', user.id)
@@ -113,7 +113,7 @@ const TakeTestPage: React.FC = () => {
       } else {
         // Check again before insert to avoid race conditions
         const { data: checkResult } = await supabase
-          .from('test_results')
+          .from('academic_test_results')
           .select('*')
           .eq('test_id', testData.id)
           .eq('student_id', user.id)
@@ -124,9 +124,9 @@ const TakeTestPage: React.FC = () => {
           setTimeLeft(testData.time_limit || testData.duration);
           return;
         }
-        // Create new test result
+        // Create new test result with upsert
         const { data, error } = await supabase
-          .from('test_results')
+          .from('academic_test_results')
           .upsert([
             {
               test_id: testData.id,
@@ -141,7 +141,12 @@ const TakeTestPage: React.FC = () => {
           .single();
 
         if (error) {
-          setError(error.message || 'An error occurred while starting the test.');
+          if (error.code === '409' || error.message?.includes('duplicate key')) {
+            setError('You have already started this test. Please resume or contact your teacher if you are stuck.');
+          } else {
+            setError(error.message || 'An error occurred while starting the test.');
+          }
+          console.error('Test result upsert error:', error);
           return;
         }
         setAnswers(data.answers || {});
@@ -183,7 +188,7 @@ const TakeTestPage: React.FC = () => {
   const saveProgress = async () => {
     try {
       const { error } = await supabase
-        .from('test_results')
+        .from('academic_test_results')
         .update({
           answers,
           updated_at: new Date().toISOString()
@@ -223,7 +228,7 @@ const TakeTestPage: React.FC = () => {
 
       // Update test result
       const { error } = await supabase
-        .from('test_results')
+        .from('academic_test_results')
         .update({
           status: 'completed',
           score,

@@ -83,7 +83,7 @@ const StudentAcademicAssignments: React.FC = () => {
       const ext = file.name.split('.').pop();
       const filePath = `${user.id}/${assignment.id}-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
-        .from('academic-assignments')
+        .from('academic_assignment_submissions')
         .upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { error: insertError } = await supabase
@@ -93,10 +93,12 @@ const StudentAcademicAssignments: React.FC = () => {
           student_id: user.id,
           file_path: filePath,
           filename: file.name,
-          status: 'submitted',
           submitted_at: new Date().toISOString()
         });
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
       fetchSubmissions();
     } catch (err) {
       // ignore
@@ -117,7 +119,7 @@ const StudentAcademicAssignments: React.FC = () => {
   const handleDownload = async (assignment: Assignment) => {
     try {
       const { data: { publicUrl } } = supabase.storage
-        .from('academic_assignments')
+        .from('academic_assignment_submissions')
         .getPublicUrl(assignment.file_path);
       const link = document.createElement('a');
       link.href = publicUrl;
@@ -132,7 +134,7 @@ const StudentAcademicAssignments: React.FC = () => {
 
   const handleViewPdf = (assignment: Assignment) => {
     const { data: { publicUrl } } = supabase.storage
-      .from('academic_assignments')
+      .from('academic_assignment_submissions')
       .getPublicUrl(assignment.file_path);
     window.open(publicUrl, '_blank');
   };
@@ -256,7 +258,7 @@ const StudentAcademicAssignments: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${submission.status === 'graded' ? 'bg-green-100 text-green-700' : 'bg-pink-100 text-pink-700'}`}>{submission.status === 'graded' ? 'Graded' : 'Assignment Done'}</span>
                           <a
-                            href={supabase.storage.from('academic-assignments').getPublicUrl(submission.file_path).data.publicUrl}
+                            href={supabase.storage.from('academic_assignment_submissions').getPublicUrl(submission.file_path).data.publicUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-pink-600 underline text-xs"

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { FileText, ArrowLeft } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
 
 interface AcademicTest {
   id: string;
@@ -13,29 +14,43 @@ interface AcademicTest {
 
 const StudentAcademicTestList: React.FC = () => {
   const [tests, setTests] = useState<AcademicTest[]>([]);
+  const [attemptedTestIds, setAttemptedTestIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuthStore();
 
   useEffect(() => {
-    const fetchTests = async () => {
+    const fetchTestsAndAttempts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabase
+        // Fetch all active academic tests
+        const { data: testsData, error: testsError } = await supabase
           .from('academic_tests')
           .select('*')
           .order('created_at', { ascending: false });
-        if (error) throw error;
-        setTests(data || []);
+        if (testsError) throw testsError;
+        setTests(testsData || []);
+
+        // Fetch attempted test IDs for this student
+        if (user?.id) {
+          const { data: resultsData, error: resultsError } = await supabase
+            .from('academic_test_results')
+            .select('test_id')
+            .eq('student_id', user.id)
+            .eq('status', 'completed');
+          if (resultsError) throw resultsError;
+          setAttemptedTestIds((resultsData || []).map((r: any) => r.test_id));
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch tests');
       } finally {
         setLoading(false);
       }
     };
-    fetchTests();
-  }, []);
+    fetchTestsAndAttempts();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100">
@@ -54,8 +69,8 @@ const StudentAcademicTestList: React.FC = () => {
           <div className="text-center text-gray-500">Loading tests...</div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
-            {tests.length === 0 && <div className="text-gray-500 text-center">No tests available.</div>}
-            {tests.filter(test => test.is_active).map((test) => (
+            {tests.filter(test => test.is_active && !attemptedTestIds.includes(test.id)).length === 0 && <div className="text-gray-500 text-center">No tests available.</div>}
+            {tests.filter(test => test.is_active && !attemptedTestIds.includes(test.id)).map((test) => (
               <div key={test.id} className="bg-white rounded-xl shadow p-6 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="bg-red-100 p-3 rounded-lg mr-4">

@@ -139,10 +139,8 @@ const AcademicTeacherAssignmentList = forwardRef<TeacherAssignmentListRef, any>(
       const { error } = await supabase
         .from('academic_assignment_submissions')
         .update({
-          status: 'graded',
           grade: grade,
-          feedback: feedbackText,
-          graded_at: new Date().toISOString()
+          feedback: feedbackText
         })
         .eq('id', submissionId);
 
