@@ -1,4 +1,4 @@
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { api } from '../services/api';
 import type { Assignment } from '../services/api';
 import { supabase } from '../lib/supabase';
@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
-import { notificationService } from '../services/notificationService';
 import { ArrowLeft, FileText, Eye, Download, Trash2, Calendar, Users, CheckCircle, Star, MessageSquare, BookOpen, Clock } from 'lucide-react';
 
 export interface TeacherAssignmentListRef {
@@ -30,7 +29,7 @@ interface StudentSubmission {
   };
 }
 
-const AcademicTeacherAssignmentList = forwardRef<TeacherAssignmentListRef, any>((props, ref) => {
+const AcademicTeacherAssignmentList = forwardRef<TeacherAssignmentListRef, any>((_, ref) => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Record<string, StudentSubmission[]>>({});
   const [loading, setLoading] = useState(true);
