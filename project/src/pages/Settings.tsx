@@ -18,7 +18,7 @@ const themeOptions = ['system', 'light', 'dark'];
 
 const Settings: React.FC = () => {
   const { user, profile, setProfile } = useAuthStore();
-  const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [fullName, setFullName] = useState(profile?.name || '');
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
   const [phone, setPhone] = useState(profile?.phone_number || '');
   const [department, setDepartment] = useState(profile?.department || '');
@@ -35,31 +35,48 @@ const Settings: React.FC = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
   const handleSave = async () => {
     setLoading(true);
     setError('');
     setSuccess('');
+    // Prepare update data and filter out undefined values
+    const updateData: Record<string, any> = {
+      name: fullName,
+      avatar_url: avatarUrl,
+      phone_number: phone,
+      department,
+      dob,
+      bio,
+      linkedin_url: linkedin,
+      github_url: github,
+      theme,
+      notification_preferences: notifications,
+    };
+    Object.keys(updateData).forEach(
+      key => (updateData[key] === undefined || updateData[key] === '') && delete updateData[key]
+    );
+    console.log('Updating profile with:', updateData);
+    const userId = user?.id || '';
+    if (!userId) {
+      setError('User not found. Please log in again.');
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase
       .from('profiles')
-      .update({
-        full_name: fullName,
-        avatar_url: avatarUrl,
-        phone_number: phone,
-        department,
-        dob,
-        bio,
-        linkedin_url: linkedin,
-        github_url: github,
-        theme,
-        notification_preferences: notifications,
-      })
-      .eq('id', user?.id);
+      .update(updateData)
+      .eq('id', userId);
     setLoading(false);
     if (!error) {
       setProfile({
         ...profile,
-        id: user?.id || '',
-        full_name: fullName,
+        id: userId,
+        name: fullName,
         email,
         avatar_url: avatarUrl,
         phone_number: phone,
@@ -70,6 +87,9 @@ const Settings: React.FC = () => {
         github_url: github,
         theme,
         notification_preferences: notifications,
+        role: (profile?.role ?? 'student') as 'student' | 'teacher' | 'admin',
+        created_at: profile?.created_at || '',
+        updated_at: profile?.updated_at || '',
       });
       setSuccess('Profile updated successfully!');
       setTimeout(() => navigate('/profile'), 1000);
@@ -123,7 +143,9 @@ const Settings: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
       <Card className="w-full max-w-2xl">
         <CardHeader className="flex flex-col items-center">
-          <AvatarUpload avatarUrl={avatarUrl} userId={user.id} onUpload={setAvatarUrl} />
+          {user && (
+            <AvatarUpload avatarUrl={avatarUrl} userId={user.id} onUpload={setAvatarUrl} />
+          )}
           <CardTitle className="mt-4">Edit Profile</CardTitle>
         </CardHeader>
         <CardContent>

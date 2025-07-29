@@ -4,7 +4,7 @@ import { User } from '@supabase/supabase-js';
 
 interface Profile {
   id: string;
-  full_name: string;
+  name: string;
   email: string;
   role: 'student' | 'teacher' | 'admin';
   registration_number?: string;
