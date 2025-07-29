@@ -47,6 +47,8 @@ import StudentAcademicTestList from './pages/StudentAcademicTestList';
 import StudentAcademicStudyMaterials from './pages/StudentAcademicStudyMaterials';
 import StudentAcademicAssignments from './pages/StudentAcademicAssignments';
 import StudentAcademicTestResults from './pages/StudentAcademicTestResults';
+import AcademicVideoTutorials from './pages/AcademicVideoTutorials';
+import StudentAcademicVideoTutorials from './pages/StudentAcademicVideoTutorials';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -132,6 +134,8 @@ const App: React.FC = () => {
             <Route path="/student/academic-study-materials" element={<StudentAcademicStudyMaterials />} />
             <Route path="/student/academic-assignments" element={<StudentAcademicAssignments />} />
             <Route path="/student/academic-test-results" element={<StudentAcademicTestResults />} />
+            <Route path="/student/academic-video-tutorials" element={<StudentAcademicVideoTutorials />} />
+            <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

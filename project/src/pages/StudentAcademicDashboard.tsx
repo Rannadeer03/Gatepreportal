@@ -9,7 +9,8 @@ import {
   TrendingUp,
   Clock,
   Users,
-  ArrowLeft
+  ArrowLeft,
+  Video
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -47,12 +48,12 @@ import { useAuthStore } from '../store/authStore';
       action: (navigate: any) => navigate('/student/academic-test-results'),
     },
     {
-      id: 'preparation-schedule',
-      title: 'Preparation Schedule',
-      icon: <Calendar className="h-10 w-10 text-yellow-500 mb-3" />,
-      description: 'View and manage your GATE preparation schedule',
-    color: 'bg-[#F59E42]/10',
-    action: (navigate: any) => navigate('/student/preparation-schedule'),
+      id: 'video-tutorials',
+      title: 'Video Tutorials',
+      icon: <Video className="h-10 w-10 text-red-600 mb-3" />,
+      description: 'Watch educational video tutorials from teachers',
+    color: 'bg-[#DC2626]/10',
+    action: (navigate: any) => navigate('/student/academic-video-tutorials'),
     },
     {
       id: 'progress-tracker',
