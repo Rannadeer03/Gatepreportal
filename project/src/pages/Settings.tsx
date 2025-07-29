@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -35,10 +35,45 @@ const Settings: React.FC = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate('/login');
     return null;
   }
+
+  const handleAvatarUpload = async (avatarUrl: string) => {
+    try {
+      // Update the profile in the database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating avatar:', error);
+        return;
+      }
+
+      // Update the local state
+      setAvatarUrl(avatarUrl);
+      setProfile({
+        ...profile,
+        id: user.id,
+        name: profile?.name || '',
+        email: profile?.email || '',
+        role: (profile?.role ?? 'student') as 'student' | 'teacher' | 'admin',
+        avatar_url: avatarUrl,
+        created_at: profile?.created_at || '',
+        updated_at: profile?.updated_at || '',
+      });
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -144,7 +179,7 @@ const Settings: React.FC = () => {
       <Card className="w-full max-w-2xl">
         <CardHeader className="flex flex-col items-center">
           {user && (
-            <AvatarUpload avatarUrl={avatarUrl} userId={user.id} onUpload={setAvatarUrl} />
+            <AvatarUpload avatarUrl={avatarUrl} userId={user.id} onUpload={handleAvatarUpload} />
           )}
           <CardTitle className="mt-4">Edit Profile</CardTitle>
         </CardHeader>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
+import { useAuthStore } from "./store/authStore";
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -56,13 +57,28 @@ const LoadingScreen = () => (
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
+  const { initialize, isLoading } = useAuthStore();
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    const initializeApp = async () => {
+      try {
+        // Initialize auth state
+        await initialize();
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+      } finally {
+        // Set loading to false after auth initialization
+        setLoading(false);
+      }
+    };
 
-  if (loading) return <LoadingScreen />;
+    initializeApp();
+  }, [initialize]);
+
+  // Show loading screen while auth is initializing
+  if (loading || isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

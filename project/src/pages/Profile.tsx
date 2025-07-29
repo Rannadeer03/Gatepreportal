@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -6,20 +6,49 @@ import { useNavigate } from 'react-router-dom';
 import AvatarUpload from '../components/ui/avatar-upload';
 import jsPDF from 'jspdf';
 import { Linkedin, Github } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export const Profile: React.FC = () => {
-  const { user, profile } = useAuthStore();
+  const { user, profile, setProfile } = useAuthStore();
   const navigate = useNavigate();
 
-  if (!user) {
-    navigate('/login');
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  if (!user || !profile) {
     return null;
   }
+
+  const handleAvatarUpload = async (avatarUrl: string) => {
+    try {
+      // Update the profile in the database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating avatar:', error);
+        return;
+      }
+
+      // Update the local state
+      setProfile({
+        ...profile,
+        avatar_url: avatarUrl
+      });
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+    }
+  };
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
     doc.text('Student Profile', 10, 10);
-    doc.text(`Name: ${profile.full_name}`, 10, 20);
+    doc.text(`Name: ${profile.name}`, 10, 20);
     doc.text(`Email: ${user.email}`, 10, 30);
     doc.text(`Phone: ${profile.phone_number || ''}`, 10, 40);
     doc.text(`Department: ${profile.department || ''}`, 10, 50);
@@ -36,8 +65,8 @@ export const Profile: React.FC = () => {
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader className="flex flex-col items-center">
-              <AvatarUpload avatarUrl={profile?.avatar_url} userId={user.id} onUpload={() => {}} />
-              <CardTitle className="mt-4 text-3xl font-bold">{profile.full_name || 'Profile'}</CardTitle>
+              <AvatarUpload avatarUrl={profile.avatar_url} userId={user.id} onUpload={handleAvatarUpload} />
+              <CardTitle className="mt-4 text-3xl font-bold">{profile.name || 'Profile'}</CardTitle>
               <p className="text-gray-500">{profile.role}</p>
             </CardHeader>
             <CardContent>
