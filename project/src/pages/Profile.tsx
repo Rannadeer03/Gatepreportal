@@ -63,6 +63,27 @@ export const Profile: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-pink-50">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
+          <div className="mb-4">
+            <Button
+              onClick={() => {
+                if (profile.role === 'student') {
+                  navigate('/student-main-dashboard');
+                } else if (profile.role === 'teacher') {
+                  navigate('/teacher-main-dashboard');
+                } else if (profile.role === 'admin') {
+                  navigate('/admin-dashboard');
+                }
+              }}
+              variant="outline"
+              className="flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2">
+                <path d="m12 19-7-7 7-7"></path>
+                <path d="M19 12H5"></path>
+              </svg>
+              Back
+            </Button>
+          </div>
           <Card>
             <CardHeader className="flex flex-col items-center">
               <AvatarUpload avatarUrl={profile.avatar_url} userId={user.id} onUpload={handleAvatarUpload} />

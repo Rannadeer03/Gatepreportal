@@ -50,6 +50,8 @@ import StudentAcademicTestResults from './pages/StudentAcademicTestResults';
 import FAQ from './pages/FAQ';
 import Support from './pages/Support';
 import Tutorials from './pages/Tutorials';
+import AcademicVideoTutorials from './pages/AcademicVideoTutorials';
+import StudentAcademicVideoTutorials from './pages/StudentAcademicVideoTutorials';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -138,6 +140,8 @@ const App: React.FC = () => {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/support" element={<Support />} />
             <Route path="/tutorials" element={<Tutorials />} />
+            <Route path="/student/academic-video-tutorials" element={<StudentAcademicVideoTutorials />} />
+            <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

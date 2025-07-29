@@ -11,7 +11,8 @@ import {
   ArrowLeft,
   Eye,
   Edit,
-  Search
+  Search,
+  Video
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -74,6 +75,15 @@ const AcademicTeacherDashboard: React.FC = () => {
       description: 'Upload and manage study materials'
     },
     {
+      id: 'video-tutorials',
+      title: 'Video Tutorials',
+      icon: <Video className="h-8 w-8" />, 
+      color: 'from-indigo-500 to-indigo-600',
+      bgColor: 'bg-indigo-50',
+      iconColor: 'text-indigo-600',
+      description: 'Upload and manage video tutorials'
+    },
+    {
       id: 'student-results',
       title: 'Student Results',
       icon: <BarChart2 className="h-8 w-8" />, 
@@ -110,6 +120,8 @@ const AcademicTeacherDashboard: React.FC = () => {
       navigate('/academic/teacher/assignments');
     } else if (id === 'materials') {
       navigate('/academic/teacher/course-materials');
+    } else if (id === 'video-tutorials') {
+      navigate('/academic/teacher/video-tutorials');
     } else if (id === 'student-results') {
       navigate('/academic/teacher/test-results');
     } else if (id === 'grades') {
