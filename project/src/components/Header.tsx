@@ -21,8 +21,7 @@ import NotificationBell from './NotificationBell';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showHelpMenu, setShowHelpMenu] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<'profile' | 'help' | 'notification' | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuthStore();
@@ -34,19 +33,27 @@ export const Header: React.FC = () => {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showProfileMenu || showHelpMenu) {
+      if (activeDropdown) {
         const target = event.target as HTMLElement;
         if (!target.closest('.profile-menu') && 
-            !target.closest('.help-menu')) {
-          setShowProfileMenu(false);
-          setShowHelpMenu(false);
+            !target.closest('.help-menu') &&
+            !target.closest('.notification-menu')) {
+          setActiveDropdown(null);
         }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showProfileMenu, showHelpMenu]);
+  }, [activeDropdown]);
+
+  const handleDropdownToggle = (dropdownType: 'profile' | 'help' | 'notification') => {
+    if (activeDropdown === dropdownType) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(dropdownType);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -155,31 +162,34 @@ export const Header: React.FC = () => {
                 ))}
 
                 {/* Notifications */}
-                <NotificationBell />
+                <NotificationBell 
+                  isOpen={activeDropdown === 'notification'}
+                  onToggle={() => handleDropdownToggle('notification')}
+                />
 
                 {/* Profile Menu */}
                 <div className="relative profile-menu">
                   <button
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    onClick={() => handleDropdownToggle('profile')}
                     className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
-                      showProfileMenu 
+                      activeDropdown === 'profile' 
                         ? 'bg-gray-100 text-gray-900' 
                         : 'text-gray-400 hover:text-gray-500 hover:bg-gray-50'
                     }`}
                   >
                     <User className="h-5 w-5" />
                     <ChevronDown className={`h-4 w-4 transition-transform ${
-                      showProfileMenu ? 'transform rotate-180' : ''
+                      activeDropdown === 'profile' ? 'transform rotate-180' : ''
                     }`} />
                   </button>
                   
-                  {showProfileMenu && (
+                  {activeDropdown === 'profile' && (
                     <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                       <div className="py-1">
                         <button
                           onClick={() => {
                             navigate('/profile');
-                            setShowProfileMenu(false);
+                            handleDropdownToggle('profile');
                           }}
                           className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
@@ -189,7 +199,7 @@ export const Header: React.FC = () => {
                         <button
                           onClick={() => {
                             navigate('/settings');
-                            setShowProfileMenu(false);
+                            handleDropdownToggle('profile');
                           }}
                           className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
@@ -211,20 +221,20 @@ export const Header: React.FC = () => {
                 {/* Help Menu */}
                 <div className="relative help-menu ml-2">
                   <button
-                    onClick={() => setShowHelpMenu(!showHelpMenu)}
+                    onClick={() => handleDropdownToggle('help')}
                     className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
-                      showHelpMenu 
+                      activeDropdown === 'help' 
                         ? 'bg-gray-100 text-gray-900' 
                         : 'text-gray-400 hover:text-gray-500 hover:bg-gray-50'
                     }`}
                   >
                     <HelpCircle className="h-5 w-5" />
                     <ChevronDown className={`h-4 w-4 transition-transform ${
-                      showHelpMenu ? 'transform rotate-180' : ''
+                      activeDropdown === 'help' ? 'transform rotate-180' : ''
                     }`} />
                   </button>
                   
-                  {showHelpMenu && (
+                  {activeDropdown === 'help' && (
                     <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                       <div className="py-1">
                         <Link

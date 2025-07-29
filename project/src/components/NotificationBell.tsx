@@ -4,12 +4,21 @@ import { notificationService, Notification } from '../services/notificationServi
 import { useAuthStore } from '../store/authStore';
 import { format } from 'date-fns';
 
-const NotificationBell: React.FC = () => {
+interface NotificationBellProps {
+  isOpen?: boolean;
+  onToggle?: () => void;
+}
+
+const NotificationBell: React.FC<NotificationBellProps> = ({ isOpen, onToggle }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
+
+  // Use internal state if no external control is provided
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isDropdownOpen = isOpen !== undefined ? isOpen : internalIsOpen;
+  const handleToggle = onToggle || (() => setInternalIsOpen(!internalIsOpen));
 
   useEffect(() => {
     if (user?.id) {
@@ -118,10 +127,10 @@ const NotificationBell: React.FC = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative notification-menu">
       {/* Notification Bell Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
       >
         <Bell className="h-6 w-6" />
@@ -133,7 +142,7 @@ const NotificationBell: React.FC = () => {
       </button>
 
       {/* Notification Dropdown */}
-      {isOpen && (
+      {isDropdownOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -155,7 +164,7 @@ const NotificationBell: React.FC = () => {
                   </button>
                 )}
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleToggle}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-4 w-4" />
