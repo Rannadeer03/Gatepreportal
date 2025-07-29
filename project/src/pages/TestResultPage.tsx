@@ -46,10 +46,10 @@ interface TestQuestion {
 const TestResultPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
-  const { user, profile } = useAuthStore();
+  const { user } = useAuthStore();
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {

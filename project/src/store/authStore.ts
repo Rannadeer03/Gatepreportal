@@ -14,6 +14,14 @@ interface Profile {
   auth_provider?: 'email';
   created_at: string;
   updated_at: string;
+  avatar_url?: string;
+  phone_number?: string;
+  bio?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  dob?: string;
+  notification_preferences?: any;
+  theme?: string;
 }
 
 interface AuthState {

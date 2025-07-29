@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   GraduationCap, 
@@ -13,6 +13,7 @@ import { useAuthStore } from '../store/authStore';
 export const StudentMainDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const [showEducationModal, setShowEducationModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -32,30 +33,16 @@ export const StudentMainDashboard: React.FC = () => {
 
         {/* Main Sections */}
         <div className="flex flex-col md:flex-row justify-center items-center gap-8">
-          {/* Academic Section Button */}
+          {/* Education Section Card */}
           <div className="flex justify-center items-center py-4">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full max-w-sm">
+            <div className="bg-gradient-to-br from-blue-400 to-pink-400 shadow-2xl rounded-2xl p-8 flex flex-col items-center w-full max-w-md">
               <button
-                onClick={() => navigate('/student-academic-dashboard')}
-                className="flex flex-col items-center w-full px-6 py-6 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-blue-500 focus:outline-none"
+                onClick={() => setShowEducationModal(true)}
+                className="flex flex-col items-center w-full px-8 py-8 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-blue-500 focus:outline-none"
               >
-                <GraduationCap className="h-10 w-10 text-blue-500 mb-3" />
-                <span className="text-xl font-bold text-gray-900 mb-1">Academic Section</span>
-                <span className="text-base text-gray-600 text-center">View your courses, academic progress, and resources</span>
-              </button>
-            </div>
-          </div>
-
-          {/* GATE Preparation Section Button */}
-          <div className="flex justify-center items-center py-4">
-            <div className="bg-gradient-to-br from-red-500 to-pink-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full max-w-sm">
-              <button
-                onClick={() => navigate('/student-dashboard')}
-                className="flex flex-col items-center w-full px-6 py-6 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-red-500 focus:outline-none"
-              >
-                <Target className="h-10 w-10 text-red-500 mb-3" />
-                <span className="text-xl font-bold text-gray-900 mb-1">GATE Preparation</span>
-                <span className="text-base text-gray-600 text-center">Access all your GATE & academic resources, tests, and materials</span>
+                <GraduationCap className="h-12 w-12 text-blue-500 mb-4" />
+                <span className="text-2xl font-bold text-gray-900 mb-2">Education Section</span>
+                <span className="text-base text-gray-600 text-center">Access Academic & GATE Preparation</span>
               </button>
             </div>
           </div>
@@ -74,6 +61,44 @@ export const StudentMainDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Education Modal */}
+        {showEducationModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center relative">
+              <button
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setShowEducationModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Section</h2>
+              <div className="flex flex-col gap-4 w-full">
+                <button
+                  onClick={() => { setShowEducationModal(false); navigate('/student-academic-dashboard'); }}
+                  className="flex flex-row items-center w-full px-6 py-4 bg-blue-50 rounded-xl shadow hover:bg-blue-100 transition-all duration-200 border border-blue-200"
+                >
+                  <GraduationCap className="h-8 w-8 text-blue-500 mr-3" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-lg font-bold text-gray-900">Academic Section</span>
+                    <span className="text-sm text-gray-600">View your courses, academic progress, and resources</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => { setShowEducationModal(false); navigate('/student-dashboard'); }}
+                  className="flex flex-row items-center w-full px-6 py-4 bg-pink-50 rounded-xl shadow hover:bg-pink-100 transition-all duration-200 border border-pink-200"
+                >
+                  <Target className="h-8 w-8 text-red-500 mr-3" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-lg font-bold text-gray-900">GATE Preparation</span>
+                    <span className="text-sm text-gray-600">Access all your GATE resources, tests, and materials</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

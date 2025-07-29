@@ -20,6 +20,7 @@ import { Register } from './pages/Register';
 import { AuthCallback } from './pages/AuthCallback';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { Profile } from './pages/Profile';
+import Settings from './pages/Settings';
 import TestManagement from './pages/TestManagement';
 import TakeTestPage from './pages/TakeTestPage';
 import TestResults from './pages/TestResults';
@@ -90,6 +91,7 @@ const App: React.FC = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/teacher/test-results" element={<TestResults />} />
             <Route path="/gate-preparation/tests" element={<GatePreparationDashboard />} />
             <Route path="/gate-preparation/materials" element={<GatePreparationDashboard />} />
