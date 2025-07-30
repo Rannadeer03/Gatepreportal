@@ -1,4 +1,3 @@
-
 import { supabase } from '../lib/supabase';
 
 export interface Subject {
@@ -11,19 +10,29 @@ export interface Subject {
 
 export const subjectService = {
   async getSubjects(): Promise<Subject[]> {
-    // For now, return mock subjects since we haven't created a subjects table
-    return [
-      { id: 'physics', name: 'Physics', code: 'PHY' },
-      { id: 'chemistry', name: 'Chemistry', code: 'CHE' },
-      { id: 'mathematics', name: 'Mathematics', code: 'MAT' },
-      { id: 'biology', name: 'Biology', code: 'BIO' },
-      { id: 'english', name: 'English', code: 'ENG' },
-      { id: 'computer-science', name: 'Computer Science', code: 'CS' }
-    ];
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching subjects:', error);
+      return [];
+    }
+    return data as Subject[];
   },
 
   async getSubjectById(id: string): Promise<Subject | null> {
-    const subjects = await this.getSubjects();
-    return subjects.find(subject => subject.id === id) || null;
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching subject by id:', error);
+      return null;
+    }
+    return data as Subject;
   }
 };
