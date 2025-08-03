@@ -251,6 +251,20 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (authError) {
         console.error('Auth registration error:', authError);
+        
+        // Handle specific error cases
+        if (authError.message?.includes('User already registered') || authError.message?.includes('already been registered')) {
+          throw new Error('An account with this email already exists. Please try signing in instead, or use a different email address.');
+        }
+        
+        if (authError.message?.includes('rate limit') || authError.message?.includes('Too Many Requests')) {
+          throw new Error('Registration is temporarily limited due to high server load. Please try again in a few minutes.');
+        }
+        
+        if (authError.message?.includes('password')) {
+          throw new Error('Password does not meet requirements. Please use a stronger password.');
+        }
+        
         throw new Error('Failed to create account. Please try again.');
       }
 
