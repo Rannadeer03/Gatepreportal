@@ -20,6 +20,7 @@ import JeeTestInterface from './pages/JeeTestInterface';
 import { Register } from './pages/Register';
 import { AuthCallback } from './pages/AuthCallback';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
 import { Profile } from './pages/Profile';
 import Settings from './pages/Settings';
 import TestManagement from './pages/TestManagement';
@@ -101,6 +102,7 @@ const App: React.FC = () => {
             <Route path="/gate-teacher-dashboard" element={<TeacherDashboard mode="gate" />} />
             <Route path="/teacher-main-dashboard" element={<TeacherMainDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/super-admin-dashboard" element={<SuperAdminDashboard />} />
             <Route path="/study-materials" element={<StudyMaterials />} />
             <Route path="/teacher/assignments" element={<TeacherAssignmentUpload />} />
             <Route path="/teacher/course-materials" element={<TeacherCourseUpload />} />

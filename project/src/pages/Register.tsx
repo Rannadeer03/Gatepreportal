@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, ChevronRight, Mail, Hash, Building, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { User, Lock, Eye, EyeOff, Mail, Hash, Building } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 export const Register: React.FC = () => {
-  const navigate = useNavigate();
   const { registerUser, isLoading, error } = useAuthStore();
-  const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -50,13 +48,8 @@ export const Register: React.FC = () => {
       return;
     }
 
-    if (role === 'student' && !formData.registration_number) {
+    if (!formData.registration_number) {
       setLocalError('Please enter your registration number');
-      return;
-    }
-
-    if (role === 'teacher' && !formData.faculty_id) {
-      setLocalError('Please enter your faculty ID');
       return;
     }
 
@@ -65,21 +58,14 @@ export const Register: React.FC = () => {
       return;
     }
 
-    if ((role === 'teacher') && !formData.verification_code) {
-      setLocalError('Please enter the verification code');
-      return;
-    }
-
     try {
       const result = await registerUser({
         email: formData.email,
         password: formData.password,
         name: formData.name,
-        role,
-        registration_number: role === 'student' ? formData.registration_number : undefined,
-        faculty_id: role === 'teacher' ? formData.faculty_id : undefined,
-        department: formData.department,
-        verification_code: (role === 'teacher') ? formData.verification_code : undefined
+        role: 'student',
+        registration_number: formData.registration_number,
+        department: formData.department
       });
 
       if (result.success) {
@@ -121,36 +107,44 @@ export const Register: React.FC = () => {
           )}
 
           {successMessage && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
-              {successMessage}
+            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800 mb-2">
+                    Registration Complete!
+                  </h3>
+                  <div className="text-sm text-green-700 whitespace-pre-line">
+                    {successMessage}
+                  </div>
+                  <div className="mt-3 text-xs text-green-600">
+                    You can close this page. Do not attempt to sign in until you receive approval notification.
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Role Selection */}
-          <div className="mb-6">
-            <div className="flex rounded-md shadow-sm">
-              <button
-                type="button"
-                onClick={() => setRole('student')}
-                className={`relative flex-1 py-2 px-3 text-sm font-medium rounded-l-md focus:outline-none ${
-                  role === 'student'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-gray-700 hover:text-gray-500 border border-gray-300'
-                }`}
-              >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('teacher')}
-                className={`relative flex-1 py-2 px-3 text-sm font-medium border-l-0 focus:outline-none ${
-                  role === 'teacher'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-gray-700 hover:text-gray-500 border border-gray-300'
-                }`}
-              >
-                Teacher
-              </button>
+          {/* Student Registration Notice */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <User className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Student Registration
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>Only students can register through this form. Teachers are added by administrators.</p>
+                  <p className="mt-1"><strong>Important:</strong> Your account will require admin approval before you can sign in.</p>
+                  <p className="mt-1">Approval typically takes 24-48 hours. You'll receive an email when approved.</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -197,51 +191,26 @@ export const Register: React.FC = () => {
               </div>
             </div>
 
-            {role === 'student' && (
-              <div>
-                <label htmlFor="registration_number" className="block text-sm font-medium text-gray-700">
-                  Registration Number
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Hash className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="registration_number"
-                    name="registration_number"
-                    type="text"
-                    value={formData.registration_number}
-                    onChange={handleInputChange}
-                    required
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="Enter your registration number"
-                  />
+            <div>
+              <label htmlFor="registration_number" className="block text-sm font-medium text-gray-700">
+                Registration Number
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Hash className="h-5 w-5 text-gray-400" />
                 </div>
+                <input
+                  id="registration_number"
+                  name="registration_number"
+                  type="text"
+                  value={formData.registration_number}
+                  onChange={handleInputChange}
+                  required
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="Enter your registration number"
+                />
               </div>
-            )}
-
-            {role === 'teacher' && (
-              <div>
-                <label htmlFor="faculty_id" className="block text-sm font-medium text-gray-700">
-                  Faculty ID
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Hash className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="faculty_id"
-                    name="faculty_id"
-                    type="text"
-                    value={formData.faculty_id}
-                    onChange={handleInputChange}
-                    required
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="Enter your faculty ID"
-                  />
-                </div>
-              </div>
-            )}
+            </div>
 
             <div>
               <label htmlFor="department" className="block text-sm font-medium text-gray-700">
@@ -337,35 +306,14 @@ export const Register: React.FC = () => {
               </div>
             </div>
 
-            {(role === 'teacher') && (
-              <div>
-                <label htmlFor="verification_code" className="block text-sm font-medium text-gray-700">
-                  Verification Code
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Shield className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="verification_code"
-                    name="verification_code"
-                    type="text"
-                    value={formData.verification_code}
-                    onChange={handleInputChange}
-                    required
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="Enter verification code"
-                  />
-                </div>
-              </div>
-            )}
 
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+                {isLoading ? 'Creating Account...' : 'Create Student Account'}
               </button>
             </div>
           </form>

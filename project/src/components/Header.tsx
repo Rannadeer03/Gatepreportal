@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  BookOpen, 
-  Menu, 
-  X, 
-  LogOut, 
-  LayoutDashboard, 
-  ClipboardList, 
-  BarChart2, 
+import {
+  BookOpen,
+  Menu,
+  X,
+  LogOut,
+  LayoutDashboard,
+  ClipboardList,
+  BarChart2,
   Plus,
   User,
   Settings,
-  Bell,
   HelpCircle,
   ChevronDown,
-  MessageCircle
+  MessageCircle,
+  Shield,
+  Users,
+  Activity
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import NotificationBell from './NotificationBell';
@@ -24,11 +26,11 @@ export const Header: React.FC = () => {
   const [activeDropdown, setActiveDropdown] = useState<'profile' | 'help' | 'notification' | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuthStore();
+  const { signOut, profile, user } = useAuthStore();
   
-  const isLoginPage = location.pathname === '/login';
-  const isAuthenticated = ['/student-main-dashboard', '/teacher-main-dashboard'].includes(location.pathname);
-  const isTeacher = location.pathname === '/teacher-main-dashboard';
+  const isAuthenticated = !!user && !!profile;
+  const isTeacher = profile?.role === 'teacher';
+  const isSuperAdmin = profile?.role === 'super_admin';
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -56,43 +58,99 @@ export const Header: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+    try {
+      // Close any open dropdowns and menus first
+      setActiveDropdown(null);
+      setIsMenuOpen(false);
+      
+      console.log('Starting logout process...');
+      
+      // Perform logout - this should handle errors gracefully
+      await signOut();
+      
+      console.log('Logout completed, redirecting...');
+      
+      // Force navigation to login page with replace to prevent back navigation
+      navigate('/login', { replace: true });
+      
+      // Add a small delay then force page reload to ensure completely clean state
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 100);
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Even if logout fails, we must redirect to login page
+      // This ensures user can always logout from the UI perspective
+      try {
+        navigate('/login', { replace: true });
+      } catch (navError) {
+        console.error('Navigation error:', navError);
+      }
+      
+      // Force redirect as fallback
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 100);
+    }
   };
 
   const getNavLinks = () => {
+    if (isSuperAdmin) {
+      return [
+        {
+          to: '/super-admin-dashboard',
+          icon: <Shield className="h-5 w-5" />,
+          text: 'Super Admin',
+          active: location.pathname === '/super-admin-dashboard'
+        },
+        {
+          to: '/super-admin-dashboard',
+          icon: <Users className="h-5 w-5" />,
+          text: 'User Management',
+          active: location.pathname === '/super-admin-dashboard'
+        },
+        {
+          to: '/super-admin-dashboard',
+          icon: <Activity className="h-5 w-5" />,
+          text: 'System Logs',
+          active: location.pathname === '/super-admin-dashboard'
+        }
+      ];
+    }
     if (isTeacher) {
       return [
-        { 
-          to: '/teacher-main-dashboard', 
-          icon: <LayoutDashboard className="h-5 w-5" />, 
+        {
+          to: '/teacher-main-dashboard',
+          icon: <LayoutDashboard className="h-5 w-5" />,
           text: 'Dashboard',
           active: location.pathname === '/teacher-main-dashboard'
         },
-        { 
-          to: '/create-test', 
-          icon: <Plus className="h-5 w-5" />, 
+        {
+          to: '/create-test',
+          icon: <Plus className="h-5 w-5" />,
           text: 'Create Test',
           active: location.pathname === '/create-test'
         },
-        { 
-          to: '/manage-tests', 
-          icon: <ClipboardList className="h-5 w-5" />, 
+        {
+          to: '/manage-tests',
+          icon: <ClipboardList className="h-5 w-5" />,
           text: 'Manage Tests',
           active: location.pathname === '/manage-tests'
         },
-        { 
-          to: '/teacher/test-results', 
-          icon: <BarChart2 className="h-5 w-5" />, 
+        {
+          to: '/teacher/test-results',
+          icon: <BarChart2 className="h-5 w-5" />,
           text: 'Results',
           active: location.pathname === '/teacher/test-results'
         }
       ];
     }
     return [
-      { 
-        to: '/student-main-dashboard', 
-        icon: <LayoutDashboard className="h-5 w-5" />, 
+      {
+        to: '/student-main-dashboard',
+        icon: <LayoutDashboard className="h-5 w-5" />,
         text: 'Dashboard',
         active: location.pathname === '/student-main-dashboard'
       }
@@ -104,8 +162,8 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Brand */}
-          <Link 
-            to={isAuthenticated ? (isTeacher ? '/teacher-main-dashboard' : '/student-main-dashboard') : '/'} 
+          <Link
+            to={isAuthenticated ? (isSuperAdmin ? '/super-admin-dashboard' : isTeacher ? '/teacher-main-dashboard' : '/student-main-dashboard') : '/'}
             className="flex items-center space-x-2 hover:opacity-75 transition-opacity"
           >
             <BookOpen className="h-8 w-8 text-indigo-600" />

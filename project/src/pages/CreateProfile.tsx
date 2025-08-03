@@ -4,11 +4,10 @@ import { authService } from '../services/api';
 
 interface ProfileFormData {
   full_name: string;
-  role: 'student' | 'teacher';
+  role: 'student';
   bio: string;
   subjects: string[];
-  qualifications?: string[];  // for teachers
-  grade_level?: string;      // for students
+  grade_level: string;
 }
 
 export const CreateProfile: React.FC = () => {
@@ -18,6 +17,7 @@ export const CreateProfile: React.FC = () => {
     role: 'student',
     bio: '',
     subjects: [],
+    grade_level: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +55,20 @@ export const CreateProfile: React.FC = () => {
           <div className="max-w-md mx-auto">
             <div className="divide-y divide-gray-200">
               <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
-                <h2 className="text-2xl font-bold mb-8">Create Your Profile</h2>
+                <h2 className="text-2xl font-bold mb-8">Create Your Student Profile</h2>
+                
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        Account Pending Approval
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p>Your student account is currently pending approval by an administrator. You can complete your profile, but you won't be able to access the full system until your account is approved.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
                 {error && (
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -81,20 +94,13 @@ export const CreateProfile: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700">
                       Role
                     </label>
-                    <select
-                      value={formData.role}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        role: e.target.value as 'student' | 'teacher',
-                        qualifications: e.target.value === 'teacher' ? [] : undefined,
-                        grade_level: e.target.value === 'student' ? '' : undefined
-                      })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      required
-                    >
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                    </select>
+                    <input
+                      type="text"
+                      value="Student"
+                      disabled
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">Only students can create profiles through this form.</p>
                   </div>
 
                   <div>
@@ -109,38 +115,25 @@ export const CreateProfile: React.FC = () => {
                     />
                   </div>
 
-                  {formData.role === 'teacher' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Qualifications (comma-separated)
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.qualifications?.join(', ')}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          qualifications: e.target.value.split(',').map(q => q.trim()) 
-                        })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        required
-                      />
-                    </div>
-                  )}
-
-                  {formData.role === 'student' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Grade Level
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.grade_level}
-                        onChange={(e) => setFormData({ ...formData, grade_level: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        required
-                      />
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Grade Level
+                    </label>
+                    <select
+                      value={formData.grade_level}
+                      onChange={(e) => setFormData({ ...formData, grade_level: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      required
+                    >
+                      <option value="">Select your grade level</option>
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                      <option value="Graduate">Graduate</option>
+                      <option value="Post Graduate">Post Graduate</option>
+                    </select>
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -165,7 +158,7 @@ export const CreateProfile: React.FC = () => {
                       loading ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                   >
-                    {loading ? 'Creating Profile...' : 'Create Profile'}
+                    {loading ? 'Creating Profile...' : 'Create Student Profile'}
                   </button>
                 </form>
               </div>

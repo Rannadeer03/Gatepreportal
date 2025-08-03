@@ -27,6 +27,9 @@ export const Login: React.FC = () => {
         case 'admin':
           navigate('/admin-dashboard');
           break;
+        case 'super_admin':
+          navigate('/super-admin-dashboard');
+          break;
         default:
           navigate('/');
       }
@@ -57,8 +60,8 @@ export const Login: React.FC = () => {
         setError(result.error || 'Failed to sign in');
       }
       // Navigation will be handled by the useEffect hook when profile is set
-    } catch (error: any) {
-      setError(error.message || 'An error occurred during sign in');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An error occurred during sign in');
     }
   };
 
@@ -68,13 +71,27 @@ export const Login: React.FC = () => {
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Sign in to your account
         </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          New student accounts require admin approval before first sign in
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {errorMessage && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-              {errorMessage}
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <div className="text-sm text-red-700 whitespace-pre-line">
+                    {errorMessage}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

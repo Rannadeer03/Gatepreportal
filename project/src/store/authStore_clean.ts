@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, getSupabaseAdmin } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { loggingService } from '../services/loggingService';
 
@@ -54,7 +54,7 @@ interface RegisterData {
   department?: string;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
   isLoading: false,
@@ -88,15 +88,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Log the login attempt
       await loggingService.logActivity('login_attempt', { email });
 
-      // Proceed with normal Supabase Auth authentication
-      console.log('Attempting Supabase Auth sign in for:', email);
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (authError) {
-        console.error('Supabase Auth error:', authError);
         throw new Error('Invalid email or password. Please try again.');
       }
 
@@ -105,7 +102,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       // Get user profile
-      let { data: profile, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authData.user.id)
@@ -113,50 +110,28 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (profileError && profileError.code !== 'PGRST116') {
         // If no profile found, create a basic one
-        try {
-          console.log('Creating profile for user:', authData.user.id);
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([{
-              id: authData.user.id,
-              name: authData.user.user_metadata?.name || 'User',
-              email: authData.user.email || email,
-              role: authData.user.user_metadata?.role || 'student',
-              auth_provider: 'email',
-              approval_status: 'approved' // Default for backward compatibility
-            }])
-            .select()
-            .single();
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: authData.user.id,
+            name: authData.user.user_metadata?.name || 'User',
+            email: authData.user.email || email,
+            role: authData.user.user_metadata?.role || 'student',
+            auth_provider: 'email',
+            approval_status: 'approved' // Default for backward compatibility
+          }])
+          .select()
+          .single();
 
-          if (createError) {
-            console.error('Failed to create profile:', createError);
-            
-            // Check if it's an RLS recursion error
-            if (createError.message && createError.message.includes('infinite recursion')) {
-              throw new Error('System configuration error. Please contact support.');
-            }
-            
-            // Check if it's a permission error
-            if (createError.code === '42501') {
-              throw new Error('Permission denied. Please contact support.');
-            }
-            
-            throw new Error('Failed to create user profile. Please try registering again.');
-          }
-
-          profile = newProfile;
-        } catch (error) {
-          console.error('Profile creation error:', error);
-          
-          // If profile creation fails, try to sign out and provide clear error
-          await supabase.auth.signOut();
-          
-          if (error instanceof Error && error.message.includes('System configuration error')) {
-            throw error; // Re-throw system errors
-          }
-          
+        if (createError) {
+          console.error('Failed to create profile:', createError);
           throw new Error('Failed to create user profile. Please try registering again.');
         }
+
+        profile = newProfile;
+      } catch (error) {
+        console.error('Profile creation error:', error);
+        throw new Error('Failed to create user profile. Please try registering again.');
       }
 
       // Check approval status for non-super-admin users
@@ -224,7 +199,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('Only students can register through this form. Teachers are added by administrators.');
       }
 
-      console.log('Starting registration for:', userData.email);
+      console.log('Starting profile-only registration for:', userData.email);
 
       // Check if email already exists
       const { data: existingProfile } = await supabase
@@ -237,37 +212,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('An account with this email already exists. Please contact support if you need assistance.');
       }
 
-      // Create Supabase Auth user first
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            name: userData.name,
-            role: userData.role
-          }
-        }
-      });
-
-      if (authError) {
-        console.error('Auth registration error:', authError);
-        throw new Error('Failed to create account. Please try again.');
-      }
-
-      if (!authData.user) {
-        throw new Error('Failed to create user account. Please try again.');
-      }
-
-      // Create profile with auth user ID
+      // Create profile directly (no Supabase Auth needed)
       const profileData = {
-        id: authData.user.id, // Use auth user ID
         name: userData.name,
         email: userData.email,
         role: userData.role,
         registration_number: userData.registration_number,
         department: userData.department,
-        auth_provider: 'email',
-        approval_status: 'pending', // Requires admin approval
+        auth_provider: 'pending', // Indicates no auth user yet
+        approval_status: 'pending',
+        temp_password: userData.password, // Store temporarily for admin approval
         created_at: new Date().toISOString()
       };
 
@@ -277,18 +231,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (profileError) {
         console.error('Profile registration error:', profileError);
-        // Clean up the auth user if profile creation fails
-        const supabaseAdmin = getSupabaseAdmin();
-        if (supabaseAdmin) {
-          await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        }
-        throw new Error('Failed to create user profile. Please try again.');
+        throw new Error('Failed to create registration request. Please try again.');
       }
 
-      console.log('Registration successful - pending approval');
-
-      // Sign out the user since they need approval
-      await supabase.auth.signOut();
+      console.log('Profile-only registration successful');
 
       // Clear auth state
       set({
@@ -297,7 +243,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null
       });
 
-      const successMessage = '🎉 Registration Successful!\n\n⏳ Please wait 24 hours for your account to be activated.\n\n📧 You will receive an email notification once your account is ready.\n\n🚫 Do not attempt to sign in until you receive confirmation.';
+      const successMessage = '🎉 Registration Successful! Your account request has been submitted.\n\n⏳ Your account is pending approval by an administrator. Please wait for approval before attempting to sign in.\n\n📧 You will receive an email notification once approved (usually within 24-48 hours).\n\n🚫 Do not attempt to sign in until you receive approval confirmation.';
 
       return {
         success: true,
