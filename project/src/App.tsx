@@ -58,6 +58,7 @@ import Tutorials from './pages/Tutorials';
 import AcademicVideoTutorials from './pages/AcademicVideoTutorials';
 import StudentAcademicVideoTutorials from './pages/StudentAcademicVideoTutorials';
 import PerformanceDashboard from './pages/PerformanceDashboard';
+import ResumeBuilder from './pages/ResumeBuilder';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -139,29 +140,30 @@ const App: React.FC = () => {
             <Route path="/gate-preparation/progress" element={<GatePreparationDashboard />} />
             <Route path="/student-academic-dashboard" element={<StudentAcademicDashboard />} />
             <Route path="/student-placement-dashboard" element={<StudentPlacementDashboard />} />
-            <Route path="/student/placement-resources" element={<StudentPlacementResources />} />
-            <Route path="/student-test-results" element={<StudentTestResults />} />
-            <Route path="/teacher/assignment-review" element={<AssignmentReview />} />
-            <Route path="/teacher-placement-dashboard" element={<TeacherPlacementDashboard />} />
-            <Route path="/teacher/pyq-questions" element={<TeacherPYQQuestions />} />
-            <Route path="/academic/teacher-dashboard" element={<AcademicTeacherDashboard />} />
-            <Route path="/academic/teacher-main-dashboard" element={<AcademicTeacherMainDashboard />} />
-            <Route path="/academic/teacher/test-management" element={<AcademicTestManagement />} />
-            <Route path="/academic/teacher/test-results" element={<AcademicTestResults />} />
-            <Route path="/academic/teacher/assignments" element={<AcademicTeacherAssignmentUpload />} />
-            <Route path="/academic/teacher/course-materials" element={<AcademicTeacherCourseUpload />} />
-            <Route path="/academic/teacher/assignment-review" element={<AcademicTeacherAssignmentList />} />
-            <Route path="/academic/create-test" element={<AcademicCreateTestPage />} />
-            <Route path="/student/academic-tests" element={<StudentAcademicTestList />} />
-            <Route path="/student/academic-study-materials" element={<StudentAcademicStudyMaterials />} />
-            <Route path="/student/academic-assignments" element={<StudentAcademicAssignments />} />
-            <Route path="/student/academic-test-results" element={<StudentAcademicTestResults />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/tutorials" element={<Tutorials />} />
-            <Route path="/student/academic-video-tutorials" element={<StudentAcademicVideoTutorials />} />
-            <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
-            <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
+                         <Route path="/student/placement-resources" element={<StudentPlacementResources />} />
+             <Route path="/student-test-results" element={<StudentTestResults />} />
+             <Route path="/teacher/assignment-review" element={<AssignmentReview />} />
+             <Route path="/teacher-placement-dashboard" element={<TeacherPlacementDashboard />} />
+             <Route path="/teacher/pyq-questions" element={<TeacherPYQQuestions />} />
+             <Route path="/academic/teacher-dashboard" element={<AcademicTeacherDashboard />} />
+             <Route path="/academic/teacher-main-dashboard" element={<AcademicTeacherMainDashboard />} />
+             <Route path="/academic/teacher/test-management" element={<AcademicTestManagement />} />
+             <Route path="/academic/teacher/test-results" element={<AcademicTestResults />} />
+             <Route path="/academic/teacher/assignments" element={<AcademicTeacherAssignmentUpload />} />
+             <Route path="/academic/teacher/course-materials" element={<AcademicTeacherCourseUpload />} />
+             <Route path="/academic/teacher/assignment-review" element={<AcademicTeacherAssignmentList />} />
+             <Route path="/academic/create-test" element={<AcademicCreateTestPage />} />
+             <Route path="/student/academic-tests" element={<StudentAcademicTestList />} />
+             <Route path="/student/academic-study-materials" element={<StudentAcademicStudyMaterials />} />
+             <Route path="/student/academic-assignments" element={<StudentAcademicAssignments />} />
+             <Route path="/student/academic-test-results" element={<StudentAcademicTestResults />} />
+             <Route path="/faq" element={<FAQ />} />
+             <Route path="/support" element={<Support />} />
+             <Route path="/tutorials" element={<Tutorials />} />
+             <Route path="/student/academic-video-tutorials" element={<StudentAcademicVideoTutorials />} />
+             <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
+             <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
+             <Route path="/resume-builder" element={<ResumeBuilder />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

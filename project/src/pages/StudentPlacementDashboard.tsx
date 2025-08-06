@@ -20,7 +20,7 @@ const placementOptions = [
     icon: <FileText className="h-10 w-10 text-blue-500 mb-3" />,
       description: 'Create and update your professional resume',
     color: 'bg-[#3B82F6]/10',
-    action: (navigate: any) => navigate('/student/resume-builder'),
+    action: (navigate: any) => navigate('/resume-builder'),
     },
     {
       id: 'interview-prep',
