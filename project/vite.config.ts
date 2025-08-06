@@ -27,6 +27,11 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           supabase: ['@supabase/supabase-js'],
           ui: ['lucide-react'],
+          utils: ['clsx', 'class-variance-authority', 'tailwind-merge'],
+          animations: ['framer-motion', 'react-type-animation'],
+          particles: ['react-tsparticles', 'tsparticles'],
+          pdf: ['jspdf', 'html2canvas'],
+          audio: ['use-sound', 'howler'],
         },
         // Optimize asset naming
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -35,7 +40,7 @@ export default defineConfig({
       },
     },
     // Optimize bundle size
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 500,
     sourcemap: false, // Disable sourcemaps in production
   },
   // Optimize development server

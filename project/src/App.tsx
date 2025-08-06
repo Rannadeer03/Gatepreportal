@@ -4,7 +4,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { useAuthStore } from "./store/authStore";
 import { monitoringService } from './services/monitoringService';
 import { performanceService } from './services/performanceService';
-import { getCurrentConfig, analyticsSettings } from './config/environment';
+import { adBlockerService } from './services/adBlockerService';
+import { analyticsSettings } from './config/environment';
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -78,6 +79,8 @@ const App: React.FC = () => {
         monitoringService.init();
         // Initialize performance optimizations
         performanceService.init();
+        // Initialize ad blocker detection
+        await adBlockerService.init();
       } catch (error) {
         console.error('Failed to initialize app:', error);
       } finally {

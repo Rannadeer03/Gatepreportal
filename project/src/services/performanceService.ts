@@ -63,22 +63,8 @@ class PerformanceService {
 
   // Setup code splitting optimization
   private setupCodeSplitting() {
-    // Only preload in production and for actual built assets
-    if (process.env.NODE_ENV === 'production') {
-      // Preload critical CSS and JS assets
-      const criticalResources = [
-        { href: '/assets/css/main.css', as: 'style' },
-        { href: '/assets/js/vendor.js', as: 'script' }
-      ];
-
-      criticalResources.forEach(resource => {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.href = resource.href;
-        link.as = resource.as;
-        document.head.appendChild(link);
-      });
-    }
+    // Disabled preloading to avoid warnings
+    // Preloading should be handled by the build system
   }
 
   // Setup error boundaries
