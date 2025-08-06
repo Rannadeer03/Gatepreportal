@@ -35,6 +35,7 @@ interface AuthState {
   profile: Profile | null;
   isLoading: boolean;
   error: string | null;
+  loginAttempts: { [email: string]: { count: number; lastAttempt: number } };
   setUser: (user: User | null) => void;
   setProfile: (profile: Profile | null) => void;
   setLoading: (isLoading: boolean) => void;
@@ -54,11 +55,12 @@ interface RegisterData {
   department?: string;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
   isLoading: false,
   error: null,
+  loginAttempts: {},
 
   setUser: (user) => set({ user }),
   setProfile: (profile) => set({ profile }),
@@ -85,18 +87,40 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
+      // Rate limiting check
+      const state = get();
+      const now = Date.now();
+      const attempts = state.loginAttempts[email] || { count: 0, lastAttempt: 0 };
+      
+      // Reset attempts if more than 15 minutes have passed
+      if (now - attempts.lastAttempt > 15 * 60 * 1000) {
+        attempts.count = 0;
+      }
+      
+      // Check if too many attempts
+      if (attempts.count >= 5) {
+        const timeLeft = Math.ceil((15 * 60 * 1000 - (now - attempts.lastAttempt)) / 1000 / 60);
+        throw new Error(`Too many login attempts. Please try again in ${timeLeft} minutes.`);
+      }
+
+      // Update attempt count
+      set({
+        loginAttempts: {
+          ...state.loginAttempts,
+          [email]: { count: attempts.count + 1, lastAttempt: now }
+        }
+      });
+
       // Log the login attempt
       await loggingService.logActivity('login_attempt', { email });
 
       // Proceed with normal Supabase Auth authentication
-      console.log('Attempting Supabase Auth sign in for:', email);
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (authError) {
-        console.error('Supabase Auth error:', authError);
         throw new Error('Invalid email or password. Please try again.');
       }
 
@@ -114,7 +138,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (profileError && profileError.code !== 'PGRST116') {
         // If no profile found, create a basic one
         try {
-          console.log('Creating profile for user:', authData.user.id);
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
             .insert([{
@@ -129,8 +152,6 @@ export const useAuthStore = create<AuthState>((set) => ({
             .single();
 
           if (createError) {
-            console.error('Failed to create profile:', createError);
-            
             // Check if it's an RLS recursion error
             if (createError.message && createError.message.includes('infinite recursion')) {
               throw new Error('System configuration error. Please contact support.');
@@ -146,8 +167,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
           profile = newProfile;
         } catch (error) {
-          console.error('Profile creation error:', error);
-          
           // If profile creation fails, try to sign out and provide clear error
           await supabase.auth.signOut();
           
@@ -205,7 +224,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       return { success: true };
     } catch (error: unknown) {
-      console.error('Email sign in error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign in with email';
       set({
         isLoading: false,

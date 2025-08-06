@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { useAuthStore } from "./store/authStore";
+import { monitoringService } from './services/monitoringService';
+import { performanceService } from './services/performanceService';
+import { getCurrentConfig, analyticsSettings } from './config/environment';
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -53,6 +56,7 @@ import Support from './pages/Support';
 import Tutorials from './pages/Tutorials';
 import AcademicVideoTutorials from './pages/AcademicVideoTutorials';
 import StudentAcademicVideoTutorials from './pages/StudentAcademicVideoTutorials';
+import PerformanceDashboard from './pages/PerformanceDashboard';
 
 // Simple loading screen component
 const LoadingScreen = () => (
@@ -70,6 +74,10 @@ const App: React.FC = () => {
       try {
         // Initialize auth state
         await initialize();
+        // Initialize monitoring service
+        monitoringService.init();
+        // Initialize performance optimizations
+        performanceService.init();
       } catch (error) {
         console.error('Failed to initialize app:', error);
       } finally {
@@ -80,6 +88,12 @@ const App: React.FC = () => {
 
     initializeApp();
   }, [initialize]);
+
+  // Track page load performance
+  useEffect(() => {
+    const pageLoadTime = performance.now();
+    monitoringService.trackPageLoad('App', pageLoadTime);
+  }, []);
 
   // Show loading screen while auth is initializing
   if (loading || isLoading) {
@@ -144,12 +158,14 @@ const App: React.FC = () => {
             <Route path="/tutorials" element={<Tutorials />} />
             <Route path="/student/academic-video-tutorials" element={<StudentAcademicVideoTutorials />} />
             <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
+            <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
         <Footer />
-        <Analytics />
+        {/* Only load analytics based on configuration */}
+        {analyticsSettings.enableVercelAnalytics && <Analytics />}
       </div>
     </BrowserRouter>
   );

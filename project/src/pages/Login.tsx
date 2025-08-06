@@ -16,7 +16,6 @@ export const Login: React.FC = () => {
   // Add effect to handle navigation when profile changes
   useEffect(() => {
     if (profile) {
-      console.log('Profile detected, navigating to dashboard...', profile.role);
       switch (profile.role) {
         case 'student':
           navigate('/student-main-dashboard');
