@@ -161,9 +161,9 @@ const SplashScreen: React.FC = () => {
     document.addEventListener('click', initAudio, { once: true });
     document.addEventListener('keydown', initAudio, { once: true });
 
-    // Navigate to login after splash screen
+    // Navigate to home after splash screen
     const timer = setTimeout(() => {
-      navigate('/login');
+      navigate('/');
     }, 3000);
 
     return () => {

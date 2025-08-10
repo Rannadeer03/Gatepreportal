@@ -110,7 +110,8 @@ const App: React.FC = () => {
         <Header />
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<SplashScreen />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/splash" element={<SplashScreen />} />
             <Route path="/home" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/create-profile" element={<CreateProfile />} />
