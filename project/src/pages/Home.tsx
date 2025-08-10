@@ -238,8 +238,15 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
                 alt={name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  // Fallback to a placeholder if image fails to load
-                  e.currentTarget.src = 'https://via.placeholder.com/128x128/6366f1/ffffff?text=' + name.charAt(0);
+                  // Create a fallback SVG with the person's initial
+                  const svg = `
+                    <svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="128" height="128" fill="#6366f1"/>
+                      <text x="64" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">${name.charAt(0)}</text>
+                    </svg>
+                  `;
+                  const blob = new Blob([svg], { type: 'image/svg+xml' });
+                  e.currentTarget.src = URL.createObjectURL(blob);
                 }}
               />
             </div>
@@ -327,7 +334,15 @@ const DeveloperCard = ({ name, role, specialization, year, achievements, photo, 
                 alt={name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = 'https://via.placeholder.com/128x128/0891b2/ffffff?text=' + name.charAt(0);
+                  // Create a fallback SVG with the person's initial
+                  const svg = `
+                    <svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="128" height="128" fill="#0891b2"/>
+                      <text x="64" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">${name.charAt(0)}</text>
+                    </svg>
+                  `;
+                  const blob = new Blob([svg], { type: 'image/svg+xml' });
+                  e.currentTarget.src = URL.createObjectURL(blob);
                 }}
               />
             </div>
@@ -615,21 +630,21 @@ const Home: React.FC = () => {
       linkedin: "https://www.linkedin.com/in/rannadeer-kumar-seetha"
     },
     {
-      name: "Student Developer 2",
-      role: "Backend Developer",
-      specialization: "Information Technology",
-      year: "4th Year",
+      name: "Mr. Shudhanshu Kumar",
+      role: "Full Stack Developer",
+      specialization: "CSE AI ML",
+      year: "2024-2028",
       achievements: [
-        "Developed RESTful APIs",
-        "Database design and optimization",
-        "System architecture planning"
+        "Passionate frontend developer",
+        "Working on SRM Virtual Lab project",
+        "Strong foundation in C, C++, Python",
+        "Expert in HTML, CSS, JavaScript, React"
       ],
-      photo: "/images/developers/developer2.jpg",
-      contact: "9876543211",
-      email: "developer2@srmist.edu.in",
-      skills: ["Python", "Django", "PostgreSQL", "AWS"],
-      github: "https://github.com/developer2",
-      linkedin: "https://linkedin.com/in/developer2"
+      photo: "/images/developers/shudhanshu-kumar.jpg.jpg",
+      email: "shudhanshukumar112003@gmail.com",
+      skills: ["HTML", "CSS", "JavaScript", "React", "C", "C++", "Python", "Node.js", "MongoDB"],
+      github: "https://github.com/Shudhanshu9122",
+      linkedin: "https://www.linkedin.com/in/shudhanshukumar"
     }
   ];
 
