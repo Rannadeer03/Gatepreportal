@@ -21,7 +21,8 @@ import {
   ArrowLeft,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  HelpCircle
 } from 'lucide-react';
 import { api } from '../services/api';
 import { testService, Test } from '../services/supabaseApi';
@@ -189,6 +190,15 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
       bgColor: 'bg-gray-50',
       iconColor: 'text-gray-600',
       description: 'Manage account settings'
+    },
+    {
+      id: 'faq',
+      title: 'FAQ & Help',
+      icon: <HelpCircle className="h-8 w-8" />,
+      color: 'from-indigo-500 to-indigo-600',
+      bgColor: 'bg-indigo-50',
+      iconColor: 'text-indigo-600',
+      description: 'Find answers to common questions'
     }
   ];
 
@@ -204,6 +214,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
       navigate('/teacher/test-results');
     } else if (id === 'grades') {
       navigate('/teacher/assignment-review');
+    } else if (id === 'faq') {
+      navigate('/faq');
     } else {
       console.log(`Clicked menu item: ${id}`);
     }

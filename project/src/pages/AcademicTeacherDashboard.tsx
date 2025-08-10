@@ -12,7 +12,8 @@ import {
   Eye,
   Edit,
   Search,
-  Video
+  Video,
+  HelpCircle
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -109,6 +110,15 @@ const AcademicTeacherDashboard: React.FC = () => {
       bgColor: 'bg-gray-50',
       iconColor: 'text-gray-600',
       description: 'Manage account settings'
+    },
+    {
+      id: 'faq',
+      title: 'FAQ & Help',
+      icon: <HelpCircle className="h-8 w-8" />, 
+      color: 'from-indigo-500 to-indigo-600',
+      bgColor: 'bg-indigo-50',
+      iconColor: 'text-indigo-600',
+      description: 'Find answers to common questions'
     }
   ];
 
@@ -126,6 +136,8 @@ const AcademicTeacherDashboard: React.FC = () => {
       navigate('/academic/teacher/test-results');
     } else if (id === 'grades') {
       navigate('/academic/teacher/assignment-review');
+    } else if (id === 'faq') {
+      navigate('/faq');
     } else {
       console.log(`Clicked menu item: ${id}`);
     }

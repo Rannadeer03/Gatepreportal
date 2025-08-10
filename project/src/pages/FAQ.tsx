@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, BookOpen, User, Settings, Bell, HelpCircle, MessageSquare, FileText, Target, Award, Calendar, Building } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -148,9 +148,45 @@ const faqData: FAQItem[] = [
 
 const FAQ: React.FC = () => {
   const [openItems, setOpenItems] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'student' | 'teacher' | 'technical'>('all');
-  const { user } = useAuthStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { user, profile, isLoading } = useAuthStore();
   const navigate = useNavigate();
+
+  // Determine user role and set appropriate default category
+  const getUserRole = () => {
+    if (!user) return 'general';
+    
+    // The role is stored in the profile object, not the user object
+    const role = profile?.role;
+    
+    if (role === 'student') return 'student';
+    if (role === 'teacher') return 'teacher';
+    if (role === 'admin' || role === 'super_admin') return 'teacher';
+    
+    // Fallback: check user email for role hints
+    if (user.email && user.email.includes('student')) return 'student';
+    if (user.email && user.email.includes('teacher')) return 'teacher';
+    
+    return 'general';
+  };
+
+  const userRole = getUserRole();
+  
+  // Show loading state while profile is loading
+  if (isLoading || (user && !profile)) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading FAQ...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'student' | 'teacher' | 'technical'>(userRole);
 
   const toggleItem = (itemId: string) => {
     setOpenItems(prev => 
@@ -160,17 +196,89 @@ const FAQ: React.FC = () => {
     );
   };
 
-  const filteredFAQ = activeCategory === 'all' 
-    ? faqData 
-    : faqData.filter(item => item.category === activeCategory);
+  // Filter FAQ based on active category and user role
+  const getFilteredFAQ = () => {
+    if (activeCategory === 'all') {
+      // Show all categories that the user has access to
+      if (userRole === 'student') {
+        return faqData.filter(item => 
+          item.category === 'general' || 
+          item.category === 'student' || 
+          item.category === 'technical'
+        );
+      } else if (userRole === 'teacher') {
+        return faqData.filter(item => 
+          item.category === 'general' || 
+          item.category === 'teacher' || 
+          item.category === 'technical'
+        );
+      } else {
+        // General users see only general and technical
+        return faqData.filter(item => 
+          item.category === 'general' || 
+          item.category === 'technical'
+        );
+      }
+    } else {
+      // Show only the selected category
+      return faqData.filter(item => item.category === activeCategory);
+    }
+  };
 
-  const categories = [
-    { id: 'all', name: 'All Questions', icon: <HelpCircle className="h-5 w-5" /> },
-    { id: 'general', name: 'General', icon: <BookOpen className="h-5 w-5" /> },
-    { id: 'student', name: 'Student', icon: <User className="h-5 w-5" /> },
-    { id: 'teacher', name: 'Teacher', icon: <Award className="h-5 w-5" /> },
-    { id: 'technical', name: 'Technical', icon: <Settings className="h-5 w-5" /> }
-  ];
+  const filteredFAQ = getFilteredFAQ().filter(item =>
+    searchQuery === '' || 
+    item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Get available categories based on user role
+  const getAvailableCategories = () => {
+    const baseCategories = [
+      { id: 'general', name: 'General', icon: <BookOpen className="h-5 w-5" /> },
+      { id: 'technical', name: 'Technical', icon: <Settings className="h-5 w-5" /> }
+    ];
+
+    if (userRole === 'student') {
+      return [
+        { id: 'all', name: 'All Questions', icon: <HelpCircle className="h-5 w-5" /> },
+        ...baseCategories,
+        { id: 'student', name: 'Student', icon: <User className="h-5 w-5" /> }
+      ];
+    } else if (userRole === 'teacher') {
+      return [
+        { id: 'all', name: 'All Questions', icon: <HelpCircle className="h-5 w-5" /> },
+        ...baseCategories,
+        { id: 'teacher', name: 'Teacher', icon: <Award className="h-5 w-5" /> }
+      ];
+    } else {
+      // General users see only general and technical
+      return [
+        { id: 'all', name: 'All Questions', icon: <HelpCircle className="h-5 w-5" /> },
+        ...baseCategories
+      ];
+    }
+  };
+
+  const categories = getAvailableCategories();
+
+  // Auto-open relevant questions based on user role
+  useEffect(() => {
+    const autoOpenQuestions = () => {
+      const questionsToOpen: string[] = [];
+      
+      if (userRole === 'student') {
+        questionsToOpen.push('student-1', 'general-1'); // How to take test, What is portal
+      } else if (userRole === 'teacher') {
+        questionsToOpen.push('teacher-1', 'general-1'); // How to create test, What is portal
+      } else {
+        questionsToOpen.push('general-1'); // What is portal
+      }
+      
+      setOpenItems(questionsToOpen);
+    };
+
+    autoOpenQuestions();
+  }, [userRole, profile]); // Also depend on profile to re-run when profile loads
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -180,14 +288,38 @@ const FAQ: React.FC = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Frequently Asked Questions
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-4">
             Find answers to common questions about the Gate Preparation Portal. 
             Can't find what you're looking for? Contact our support team.
           </p>
+                     {user && (
+             <div className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg">
+               <User className="h-4 w-4 mr-2" />
+               <span className="text-sm font-medium">
+                 Showing {userRole === 'student' ? 'Student' : userRole === 'teacher' ? 'Teacher' : 'General'} related questions
+                 {profile?.role && ` (Logged in as: ${profile.role})`}
+               </span>
+             </div>
+           )}
         </div>
 
-        {/* Category Filter */}
-        <div className="mb-8">
+        {/* Search and Category Filter */}
+        <div className="mb-8 space-y-4">
+          {/* Search Bar */}
+          <div className="max-w-md mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search questions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <HelpCircle className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            </div>
+          </div>
+
+          {/* Category Filter */}
           <div className="flex flex-wrap justify-center gap-2">
             {categories.map((category) => (
               <button
@@ -208,33 +340,57 @@ const FAQ: React.FC = () => {
 
         {/* FAQ Items */}
         <div className="space-y-4">
-          {filteredFAQ.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-            >
-              <button
-                onClick={() => toggleItem(item.id)}
-                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+          {filteredFAQ.length > 0 ? (
+            filteredFAQ.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
               >
-                <span className="font-medium text-gray-900 pr-4">
-                  {item.question}
-                </span>
-                {openItems.includes(item.id) ? (
-                  <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                <button
+                  onClick={() => toggleItem(item.id)}
+                  className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <span className="font-medium text-gray-900 pr-4">
+                    {item.question}
+                  </span>
+                  {openItems.includes(item.id) ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  )}
+                </button>
+                {openItems.includes(item.id) && (
+                  <div className="px-6 pb-4">
+                    <p className="text-gray-700 leading-relaxed">
+                      {item.answer}
+                    </p>
+                  </div>
                 )}
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <HelpCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No questions found
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {searchQuery 
+                  ? `No questions match "${searchQuery}". Try different keywords or browse all categories.`
+                  : 'No questions available for your current selection.'
+                }
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveCategory('all');
+                }}
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                View All Questions
               </button>
-              {openItems.includes(item.id) && (
-                <div className="px-6 pb-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {item.answer}
-                  </p>
-                </div>
-              )}
             </div>
-          ))}
+          )}
         </div>
 
         {/* Contact Support */}

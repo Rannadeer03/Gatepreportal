@@ -15,7 +15,9 @@ import {
   PenTool,
   Calendar,
   TrendingUp,
-  Plus
+  Plus,
+  HelpCircle,
+  MessageSquare
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -179,6 +181,38 @@ export const TeacherMainDashboard: React.FC = () => {
               <div className="text-left">
                 <p className="font-semibold text-gray-900 text-lg">Add Materials</p>
                 <p className="text-sm text-gray-600">Upload study resources</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Help & Support Section */}
+        <div className="mt-16">
+          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Help & Support</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <button
+              onClick={() => navigate('/faq')}
+              className="flex items-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-indigo-500"
+            >
+              <div className="bg-indigo-100 p-3 rounded-lg mr-4">
+                <HelpCircle className="h-6 w-6 text-indigo-600" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-900 text-lg">FAQ</p>
+                <p className="text-sm text-gray-600">Find answers to common questions</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => navigate('/support')}
+              className="flex items-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-green-500"
+            >
+              <div className="bg-green-100 p-3 rounded-lg mr-4">
+                <MessageSquare className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-900 text-lg">Contact Support</p>
+                <p className="text-sm text-gray-600">Get help from our support team</p>
               </div>
             </button>
           </div>
