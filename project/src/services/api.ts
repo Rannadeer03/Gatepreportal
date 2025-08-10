@@ -19,7 +19,7 @@ export interface Subject {
   id: string;
   name: string;
   code: string;
-  teacher_id: string;
+  teacher_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -152,17 +152,59 @@ export const api = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
+    console.log('Adding subject:', subject);
+
+    // First check if teacher_id column exists
+    const { data: existingSubjects } = await supabase
+      .from('subjects')
+      .select('*')
+      .limit(1);
+
+    const hasTeacherId = existingSubjects && existingSubjects.length > 0 && 'teacher_id' in existingSubjects[0];
+    console.log('teacher_id column exists:', hasTeacherId);
+
+    const insertData = hasTeacherId 
+      ? {
+          name: subject.name,
+          code: subject.code,
+          teacher_id: user.id
+        }
+      : {
+          name: subject.name,
+          code: subject.code
+        };
+
+    console.log('Inserting data:', insertData);
+
+    // Try to insert with conflict handling
     const { data, error } = await supabase
       .from('subjects')
-      .insert([{
-        name: subject.name,
-        code: subject.code,
-        teacher_id: user.id
-      }])
+      .upsert([insertData], { 
+        onConflict: 'code',
+        ignoreDuplicates: false 
+      })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error adding subject:', error);
+      // Try without upsert as fallback
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('subjects')
+        .insert([insertData])
+        .select()
+        .single();
+      
+      if (fallbackError) {
+        console.error('Fallback insert also failed:', fallbackError);
+        throw fallbackError;
+      }
+      
+      console.log('Successfully added subject (fallback):', fallbackData);
+      return fallbackData;
+    }
+    
+    console.log('Successfully added subject:', data);
     return data;
   },
 
@@ -170,14 +212,44 @@ export const api = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // Get subjects assigned to this teacher OR subjects without teacher_id (available to all teachers)
+    console.log('Getting subjects for user:', user.id);
+
+    // Try a simpler query first to see if the table exists and has data
+    const { data: allSubjects, error: allError } = await supabase
+      .from('subjects')
+      .select('*');
+
+    if (allError) {
+      console.error('Error fetching all subjects:', allError);
+      throw allError;
+    }
+
+    console.log('All subjects in database:', allSubjects);
+
+    // Check if the subjects have teacher_id column by looking at the first subject
+    const hasTeacherId = allSubjects && allSubjects.length > 0 && 'teacher_id' in allSubjects[0];
+    console.log('Subjects have teacher_id column:', hasTeacherId);
+
+    if (!hasTeacherId) {
+      // If teacher_id column doesn't exist, return all subjects
+      console.log('No teacher_id column found, returning all subjects');
+      return allSubjects || [];
+    }
+
+    // Now try the filtered query only if teacher_id column exists
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
       .or(`teacher_id.eq.${user.id},teacher_id.is.null`);
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.error('Error fetching filtered subjects:', error);
+      // Return all subjects as fallback
+      return allSubjects || [];
+    }
+    
+    console.log('Filtered subjects:', data);
+    return data || [];
   },
 
   async deleteSubject(subjectId: string) {
@@ -198,6 +270,52 @@ export const api = {
     } catch (error) {
       console.error('Error deleting subjects:', error);
       throw new Error('Failed to delete all subjects');
+    }
+  },
+
+  // Utility function to ensure subjects exist
+  async ensureSubjectsExist() {
+    try {
+      const existingSubjects = await this.getSubjects();
+      console.log('Existing subjects:', existingSubjects);
+      
+      if (existingSubjects && existingSubjects.length > 0) {
+        console.log('Subjects already exist, returning them');
+        return existingSubjects;
+      }
+      
+      console.log('No subjects found, creating default ones...');
+      
+      // Define some basic subjects
+      const defaultSubjects = [
+        { name: 'Engineering Mathematics', code: 'EM001' },
+        { name: 'Electric Circuits', code: 'EC002' },
+        { name: 'Electromagnetic Fields', code: 'EMF003' },
+        { name: 'Signals and Systems', code: 'SS004' },
+        { name: 'Electrical Machines', code: 'EM005' },
+        { name: 'Power Systems', code: 'PS006' },
+        { name: 'Control Systems', code: 'CS007' },
+        { name: 'Electrical Measurements', code: 'EM008' },
+        { name: 'Analog Electronics', code: 'AE009' },
+        { name: 'Power Electronics', code: 'PE010' }
+      ];
+      
+      const addedSubjects = [];
+      for (const subject of defaultSubjects) {
+        try {
+          const added = await this.addSubject(subject);
+          addedSubjects.push(added);
+          console.log(`Added subject: ${subject.name}`);
+        } catch (err) {
+          console.error(`Failed to add subject ${subject.name}:`, err);
+        }
+      }
+      
+      console.log('Total subjects added:', addedSubjects.length);
+      return addedSubjects;
+    } catch (error) {
+      console.error('Error ensuring subjects exist:', error);
+      throw error;
     }
   },
 

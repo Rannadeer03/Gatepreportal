@@ -11,7 +11,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439011',
     name: 'Engineering Mathematics',
     code: '001',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -19,7 +19,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439012',
     name: 'Electric Circuits',
     code: '002',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -27,7 +27,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439013',
     name: 'Electromagnetic Fields',
     code: '003',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -35,7 +35,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439014',
     name: 'Signals and Systems',
     code: '004',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -43,7 +43,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439015',
     name: 'Electrical Machines',
     code: '005',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -51,7 +51,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439016',
     name: 'Power Systems',
     code: '006',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -59,7 +59,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439017',
     name: 'Control Systems',
     code: '007',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -67,7 +67,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439018',
     name: 'Electrical and Electronic Measurements',
     code: '008',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -75,7 +75,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439019',
     name: 'Analog and Digital Electronics',
     code: '009',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   },
@@ -83,7 +83,7 @@ const engineeringSubjects: Subject[] = [
     id: '507f1f77bcf86cd799439020',
     name: 'Power Electronics',
     code: '010',
-    teacher_id: '',
+    teacher_id: null,
     created_at: '',
     updated_at: ''
   }
@@ -106,42 +106,26 @@ const TeacherAssignmentUpload: React.FC<TeacherAssignmentUploadProps> = ({ mode 
   const listRef = useRef<{ fetchAssignments: () => Promise<void> }>(null);
   const navigate = useNavigate();
 
+
+
   // Initialize subjects
   useEffect(() => {
     const initializeSubjects = async () => {
       try {
         setIsLoading(true);
         setError('');
+        console.log('Initializing subjects...');
 
-        // First, try to get existing subjects
-        let dbSubjects = await api.getSubjects();
-        
-        // If no subjects exist, add them
-        if (!dbSubjects || dbSubjects.length === 0) {
-          // Delete any existing subjects first
-          await api.deleteAllSubjects();
-          
-          // Add each subject one by one
-          for (const subject of engineeringSubjects) {
-            try {
-              await api.addSubject({
-                name: subject.name,
-                code: subject.code
-              });
-            } catch (err) {
-              console.error(`Failed to add subject ${subject.code}:`, err);
-              setError(`Failed to add subject ${subject.code}. Please try again.`);
-            }
-          }
-          
-          // Get the newly added subjects
-          dbSubjects = await api.getSubjects();
-        }
+        // Use the utility function to ensure subjects exist
+        let dbSubjects = await api.ensureSubjectsExist();
+        console.log('Subjects after ensuring they exist:', dbSubjects);
 
         if (dbSubjects && dbSubjects.length > 0) {
+          console.log('Setting subjects:', dbSubjects);
           setSubjects(dbSubjects);
           setMessage('Subjects loaded successfully');
         } else {
+          console.error('No subjects available after initialization');
           setError('No subjects available. Please refresh the page.');
         }
       } catch (err) {
@@ -287,6 +271,30 @@ const TeacherAssignmentUpload: React.FC<TeacherAssignmentUploadProps> = ({ mode 
                     </option>
                   ))}
                 </select>
+              )}
+              {subjects.length === 0 && !isLoading && (
+                <div className="text-red-500 text-sm mt-1">
+                  <p>No subjects available</p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        setError('');
+                        setIsLoading(true);
+                        const newSubjects = await api.ensureSubjectsExist();
+                        setSubjects(newSubjects);
+                        setMessage('Subjects loaded successfully');
+                      } catch (err) {
+                        console.error('Error loading subjects:', err);
+                        setError('Failed to load subjects. Please try again.');
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                  >
+                    Load Subjects
+                  </button>
+                </div>
               )}
             </div>
 
