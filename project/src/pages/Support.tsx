@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Mail, Phone, MessageSquare, Clock, MapPin, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import LiveChat from '../components/LiveChat';
 
 const Support: React.FC = () => {
   const navigate = useNavigate();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatMinimized, setIsChatMinimized] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -51,12 +54,20 @@ const Support: React.FC = () => {
             <p className="text-gray-600 mb-4">
               Call us during business hours for immediate assistance.
             </p>
-            <a
-              href="tel:+91-1234567890"
-              className="inline-flex items-center text-green-600 hover:text-green-800 font-medium"
-            >
-              +91-1234567890
-            </a>
+            <div className="space-y-2">
+              <a
+                href="tel:+91-8757010589"
+                className="block text-green-600 hover:text-green-800 font-medium"
+              >
+                +91-8757010589
+              </a>
+              <a
+                href="tel:+91-8519947343"
+                className="block text-green-600 hover:text-green-800 font-medium"
+              >
+                +91-8519947343
+              </a>
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -67,7 +78,10 @@ const Support: React.FC = () => {
             <p className="text-gray-600 mb-4">
               Chat with our support team in real-time during business hours.
             </p>
-            <button className="inline-flex items-center text-purple-600 hover:text-purple-800 font-medium">
+            <button 
+              onClick={() => setIsChatOpen(true)}
+              className="inline-flex items-center text-purple-600 hover:text-purple-800 font-medium"
+            >
               Start Chat
             </button>
           </div>
@@ -95,6 +109,9 @@ const Support: React.FC = () => {
             <div>
               <h4 className="font-medium text-gray-900 mb-2">Emergency Support</h4>
               <p className="text-gray-600">Available 24/7 for critical issues</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Call: +91-8757010589 or +91-8519947343
+              </p>
             </div>
           </div>
         </div>
@@ -143,6 +160,17 @@ const Support: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Live Chat Component */}
+      <LiveChat
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        onMinimize={() => {
+          setIsChatOpen(false);
+          setIsChatMinimized(true);
+        }}
+        isMinimized={isChatMinimized}
+      />
     </div>
   );
 };

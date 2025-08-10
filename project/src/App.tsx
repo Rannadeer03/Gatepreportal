@@ -10,6 +10,7 @@ import { analyticsSettings } from './config/environment';
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import SplashScreen from "./components/splashScreen";
+import FloatingChatButton from "./components/FloatingChatButton";
 import { Login } from "./pages/Login";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { NewStudentDashboard } from './pages/NewStudentDashboard';
@@ -170,6 +171,8 @@ const App: React.FC = () => {
           </Routes>
         </main>
         <Footer />
+        {/* Floating Chat Button - Available globally */}
+        <FloatingChatButton />
         {/* Only load analytics based on configuration */}
         {analyticsSettings.enableVercelAnalytics && <Analytics />}
       </div>
