@@ -242,7 +242,7 @@ const StudentAcademicVideoTutorials: React.FC = () => {
       {/* Video Modal */}
       {showVideoModal && selectedTutorial && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-[calc(100vw-2rem)] sm:w-full sm:max-w-4xl mx-4 max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">{selectedTutorial.title}</h2>

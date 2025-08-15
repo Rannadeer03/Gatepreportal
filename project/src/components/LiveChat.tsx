@@ -131,7 +131,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ isOpen, onClose, onMinimize, isMini
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-96 h-[500px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
+            <div className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] sm:w-96 h-[calc(100vh-2rem)] sm:h-[500px] max-h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
       {/* Header */}
       <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -165,7 +165,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ isOpen, onClose, onMinimize, isMini
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-3 ${
                 message.sender === 'user'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-900 border border-gray-200'

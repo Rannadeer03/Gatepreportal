@@ -50,6 +50,11 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeDropdown]);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
   const handleDropdownToggle = (dropdownType: 'profile' | 'help' | 'notification') => {
     if (activeDropdown === dropdownType) {
       setActiveDropdown(null);
@@ -159,20 +164,21 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Brand */}
           <Link
             to={isAuthenticated ? (isSuperAdmin ? '/super-admin-dashboard' : isTeacher ? '/teacher-main-dashboard' : '/student-main-dashboard') : '/'}
-            className="flex items-center space-x-2 hover:opacity-75 transition-opacity"
+            className="flex items-center space-x-2 hover:opacity-75 transition-opacity min-h-[44px]"
           >
             <BookOpen className="h-8 w-8 text-indigo-600" />
-            <span className="text-xl font-bold text-gray-900">SRM Lab</span>
+            <span className="text-fluid-lg font-bold text-gray-900 hidden sm:block">SRM Lab</span>
+            <span className="text-fluid-base font-bold text-gray-900 sm:hidden">SRM</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-1">
             {isAuthenticated ? (
               <>
                 {getNavLinks().map((link) => (
@@ -180,7 +186,7 @@ export const Header: React.FC = () => {
                     <button
                       key={link.to + link.text}
                       onClick={() => navigate('/teacher/test-results')}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-fluid-sm font-medium transition-colors min-h-[44px]
                         ${location.pathname === '/teacher/test-results' 
                           ? 'bg-indigo-50 text-indigo-700' 
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -194,7 +200,7 @@ export const Header: React.FC = () => {
                     <button
                       key={link.to + link.text}
                       onClick={() => navigate('/teacher/test-management')}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-fluid-sm font-medium transition-colors min-h-[44px]
                         ${location.pathname === '/teacher/test-management' 
                           ? 'bg-indigo-50 text-indigo-700' 
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -208,7 +214,7 @@ export const Header: React.FC = () => {
                     <Link
                       key={link.to + link.text}
                       to={link.to}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-fluid-sm font-medium transition-colors min-h-[44px]
                         ${link.active 
                           ? 'bg-indigo-50 text-indigo-700' 
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -230,11 +236,13 @@ export const Header: React.FC = () => {
                 <div className="relative profile-menu">
                   <button
                     onClick={() => handleDropdownToggle('profile')}
-                    className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
+                    className={`flex items-center space-x-2 p-2 rounded-lg transition-colors min-h-[44px] ${
                       activeDropdown === 'profile' 
                         ? 'bg-gray-100 text-gray-900' 
                         : 'text-gray-400 hover:text-gray-500 hover:bg-gray-50'
                     }`}
+                    aria-expanded={activeDropdown === 'profile'}
+                    aria-haspopup="true"
                   >
                     <User className="h-5 w-5" />
                     <ChevronDown className={`h-4 w-4 transition-transform ${
@@ -243,14 +251,14 @@ export const Header: React.FC = () => {
                   </button>
                   
                   {activeDropdown === 'profile' && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                       <div className="py-1">
                         <button
                           onClick={() => {
                             navigate('/profile');
                             handleDropdownToggle('profile');
                           }}
-                          className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="group flex w-full items-center px-4 py-3 text-fluid-sm text-gray-700 hover:bg-gray-50 min-h-[44px]"
                         >
                           <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-gray-500" />
                           Your Profile
@@ -260,14 +268,14 @@ export const Header: React.FC = () => {
                             navigate('/settings');
                             handleDropdownToggle('profile');
                           }}
-                          className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="group flex w-full items-center px-4 py-3 text-fluid-sm text-gray-700 hover:bg-gray-50 min-h-[44px]"
                         >
                           <Settings className="h-4 w-4 mr-3 text-gray-400 group-hover:text-gray-500" />
                           Settings
                         </button>
                         <button
                           onClick={handleLogout}
-                          className="group flex w-full items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                          className="group flex w-full items-center px-4 py-3 text-fluid-sm text-red-700 hover:bg-red-50 min-h-[44px]"
                         >
                           <LogOut className="h-4 w-4 mr-3 text-red-400 group-hover:text-red-500" />
                           Logout
@@ -281,11 +289,13 @@ export const Header: React.FC = () => {
                 <div className="relative help-menu ml-2">
                   <button
                     onClick={() => handleDropdownToggle('help')}
-                    className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
+                    className={`flex items-center space-x-2 p-2 rounded-lg transition-colors min-h-[44px] ${
                       activeDropdown === 'help' 
                         ? 'bg-gray-100 text-gray-900' 
                         : 'text-gray-400 hover:text-gray-500 hover:bg-gray-50'
                     }`}
+                    aria-expanded={activeDropdown === 'help'}
+                    aria-haspopup="true"
                   >
                     <HelpCircle className="h-5 w-5" />
                     <ChevronDown className={`h-4 w-4 transition-transform ${
@@ -294,25 +304,25 @@ export const Header: React.FC = () => {
                   </button>
                   
                   {activeDropdown === 'help' && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                       <div className="py-1">
                         <Link
                           to="/faq"
-                          className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="group flex items-center px-4 py-3 text-fluid-sm text-gray-700 hover:bg-gray-50 min-h-[44px]"
                         >
                           <HelpCircle className="h-4 w-4 mr-3 text-gray-400 group-hover:text-gray-500" />
                           FAQ
                         </Link>
                         <Link
                           to="/tutorials"
-                          className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="group flex items-center px-4 py-3 text-fluid-sm text-gray-700 hover:bg-gray-50 min-h-[44px]"
                         >
                           <BookOpen className="h-4 w-4 mr-3 text-gray-400 group-hover:text-gray-500" />
                           Tutorials
                         </Link>
                         <Link
                           to="/support"
-                          className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="group flex items-center px-4 py-3 text-fluid-sm text-gray-700 hover:bg-gray-50 min-h-[44px]"
                         >
                           <MessageCircle className="h-4 w-4 mr-3 text-gray-400 group-hover:text-gray-500" />
                           Contact Support
@@ -327,7 +337,7 @@ export const Header: React.FC = () => {
                 {/* Login Button for unauthenticated users */}
                 <Link
                   to="/login"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-fluid-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Login
@@ -336,7 +346,7 @@ export const Header: React.FC = () => {
                 {/* Register Button for unauthenticated users */}
                 <Link
                   to="/register"
-                  className="inline-flex items-center px-4 py-2 border border-indigo-600 text-sm font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-indigo-600 text-fluid-sm font-medium rounded-lg text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px] ml-2"
                 >
                   Sign Up
                 </Link>
@@ -346,11 +356,12 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-50"
-              aria-expanded="false"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-50 min-h-[44px] min-w-[44px]"
+              aria-expanded={isMenuOpen}
+              aria-label="Toggle navigation menu"
             >
               <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
@@ -365,7 +376,7 @@ export const Header: React.FC = () => {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden">
+        <div className="lg:hidden bg-white border-t border-gray-200 shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {isAuthenticated ? (
               <>
@@ -374,7 +385,11 @@ export const Header: React.FC = () => {
                     <button
                       key={link.to + link.text}
                       onClick={() => { navigate('/teacher/test-results'); setIsMenuOpen(false); }}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/teacher/test-results' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                      className={`flex items-center space-x-2 px-3 py-3 rounded-lg text-fluid-base font-medium min-h-[44px] w-full text-left ${
+                        location.pathname === '/teacher/test-results' 
+                          ? 'bg-indigo-50 text-indigo-700' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
                       style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                       {link.icon}
@@ -384,7 +399,11 @@ export const Header: React.FC = () => {
                     <button
                       key={link.to + link.text}
                       onClick={() => { navigate('/teacher/test-management'); setIsMenuOpen(false); }}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/teacher/test-management' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                      className={`flex items-center space-x-2 px-3 py-3 rounded-lg text-fluid-base font-medium min-h-[44px] w-full text-left ${
+                        location.pathname === '/teacher/test-management' 
+                          ? 'bg-indigo-50 text-indigo-700' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
                       style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                       {link.icon}
@@ -394,7 +413,11 @@ export const Header: React.FC = () => {
                     <Link
                       key={link.to + link.text}
                       to={link.to}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${link.active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                      className={`flex items-center space-x-2 px-3 py-3 rounded-lg text-fluid-base font-medium min-h-[44px] w-full ${
+                        link.active 
+                          ? 'bg-indigo-50 text-indigo-700' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {link.icon}
@@ -402,44 +425,66 @@ export const Header: React.FC = () => {
                     </Link>
                   )
                 ))}
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-red-700 hover:bg-red-50"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span>Logout</span>
-                </button>
+                
+                {/* Mobile Profile Actions */}
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 min-h-[44px] w-full"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="h-5 w-5" />
+                    <span>Your Profile</span>
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 min-h-[44px] w-full"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>Settings</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center space-x-2 px-3 py-3 rounded-lg text-fluid-base font-medium text-red-700 hover:bg-red-50 min-h-[44px]"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Logout</span>
+                  </button>
+                </div>
               </>
             ) : (
               <>
                 <Link
                   to="/about"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  className="block px-3 py-3 rounded-lg text-fluid-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 min-h-[44px]"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   About
                 </Link>
                 <Link
                   to="/contact"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  className="block px-3 py-3 rounded-lg text-fluid-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 min-h-[44px]"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Contact
                 </Link>
-                <Link
-                  to="/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 border border-indigo-600 hover:bg-indigo-50"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
+                <div className="border-t border-gray-200 pt-2 mt-2 space-y-2">
+                  <Link
+                    to="/login"
+                    className="block px-3 py-3 rounded-lg text-fluid-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 min-h-[44px] text-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block px-3 py-3 rounded-lg text-fluid-base font-medium text-indigo-600 border border-indigo-600 hover:bg-indigo-50 min-h-[44px] text-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
               </>
             )}
           </div>

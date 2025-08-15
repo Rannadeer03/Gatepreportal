@@ -125,13 +125,13 @@ const StatCard = ({ number, label }: StatCardProps) => {
   return (
     <motion.div
       ref={ref}
-      className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 text-center border border-white/10 shadow-xl"
+      className="bg-white/5 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center border border-white/10 shadow-xl"
       whileHover={{ scale: 1.05 }}
     >
-      <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+      <div className="text-fluid-2xl sm:text-fluid-3xl lg:text-fluid-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
         {count.toLocaleString()}+
       </div>
-      <div className="text-indigo-100 font-medium">{label}</div>
+      <div className="text-fluid-sm sm:text-fluid-base text-indigo-100 font-medium">{label}</div>
     </motion.div>
   );
 };
@@ -187,18 +187,18 @@ const FeatureCard = ({ icon: Icon, title, description }: FeatureCardProps) => {
       className="group perspective-1000"
     >
       <motion.div
-        className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
+        className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
         whileHover={{ rotateY: 10, rotateX: 5 }}
       >
         <div className="flex flex-col items-center text-center">
           <motion.div 
-            className="mb-6 p-4 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg"
+            className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg"
             whileHover={{ scale: 1.1 }}
           >
-            <Icon className="w-12 h-12 text-white" />
+            <Icon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
           </motion.div>
-          <h3 className="text-2xl font-bold text-white mb-4">{title}</h3>
-          <p className="text-indigo-100 leading-relaxed">{description}</p>
+          <h3 className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl font-bold text-white mb-3 sm:mb-4">{title}</h3>
+          <p className="text-fluid-sm sm:text-fluid-base text-indigo-100 leading-relaxed">{description}</p>
         </div>
       </motion.div>
     </motion.div>
@@ -659,18 +659,18 @@ const Home: React.FC = () => {
       <GradientBackground />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
+      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="max-w-6xl mx-auto text-center">
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 100 }}
-            className="mb-16"
+            className="mb-8 sm:mb-12 lg:mb-16"
           >
             <Mascot />
           </motion.div>
 
-          <h1 className="text-7xl font-bold text-white mb-8 leading-tight">
+          <h1 className="text-fluid-4xl sm:text-fluid-5xl lg:text-fluid-6xl xl:text-fluid-7xl font-bold text-white mb-6 sm:mb-8 leading-tight px-4">
             Transform Your
             <TypeAnimation
               sequence={[
@@ -688,7 +688,7 @@ const Home: React.FC = () => {
             />
           </h1>
 
-          <p className="text-2xl text-indigo-100 mb-12 max-w-3xl mx-auto">
+          <p className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl text-indigo-100 mb-8 sm:mb-10 lg:mb-12 max-w-3xl mx-auto px-4">
             <TypeAnimation
               sequence={[
                 'Join thousands mastering their subjects with our intelligent platform...',
@@ -703,7 +703,7 @@ const Home: React.FC = () => {
           </p>
 
           <motion.div 
-            className="flex flex-wrap justify-center gap-6"
+            className="flex flex-wrap justify-center gap-4 sm:gap-6 px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -712,17 +712,17 @@ const Home: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/login')}
-              className="btn-primary group text-lg font-semibold px-8 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              className="btn-responsive group text-fluid-base sm:text-fluid-lg font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white min-h-[44px]"
             >
-              <span className="flex items-center space-x-3">
-                <Rocket className="w-6 h-6" />
+              <span className="flex items-center space-x-2 sm:space-x-3">
+                <Rocket className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span>Launch Your Journey</span>
               </span>
             </motion.button>
           </motion.div>
 
           <motion.div 
-            className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+            className="mt-12 sm:mt-16 lg:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
@@ -735,23 +735,23 @@ const Home: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-32 px-4 relative">
+      <section className="py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-7xl mx-auto">
           <motion.div 
-            className="text-center mb-24"
+            className="text-center mb-12 sm:mb-16 lg:mb-24"
             initial={{ y: 50 }}
             whileInView={{ y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-5xl font-bold text-white mb-6">
+            <h2 className="text-fluid-3xl sm:text-fluid-4xl lg:text-fluid-5xl font-bold text-white mb-4 sm:mb-6 px-4">
               Revolutionary Features
             </h2>
-            <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
+            <p className="text-fluid-lg sm:text-fluid-xl text-indigo-100 max-w-2xl mx-auto px-4">
               Discover tools designed to accelerate your learning process
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
             {features.map((feature) => (
               <FeatureCard 
                 key={feature.title}

@@ -158,7 +158,7 @@ export const StudentPlacementResources: React.FC = () => {
       {/* Question Modal */}
       {showQuestionModal && selectedQuestion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-xl w-[calc(100vw-2rem)] sm:w-full sm:max-w-4xl mx-4 max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-2xl font-bold text-gray-900">{selectedQuestion.title}</h2>
               <button
