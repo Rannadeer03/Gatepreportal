@@ -373,7 +373,7 @@ export const Header: React.FC = () => {
           <div className="lg:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-50 touch-target transition-all duration-200"
+              className="inline-flex items-center justify-center p-3 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-50 touch-target transition-all duration-200"
               aria-expanded={isMenuOpen}
               aria-label="Toggle navigation menu"
             >
@@ -398,8 +398,8 @@ export const Header: React.FC = () => {
           />
           
           {/* Mobile menu */}
-          <div className="lg:hidden fixed top-14 sm:top-16 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 animate-slide-down max-h-[calc(100vh-4rem)] overflow-y-auto">
-            <div className="px-4 py-2 space-y-1">
+          <div className="lg:hidden fixed top-14 sm:top-16 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 animate-slide-down max-h-[calc(100vh-4rem)] overflow-y-auto safe-area-bottom">
+            <div className="px-4 py-3 space-y-2">
               {isAuthenticated ? (
                 <>
                   {getNavLinks().map((link) => (
@@ -448,6 +448,34 @@ export const Header: React.FC = () => {
                     )
                   ))}
                   
+                  {/* Mobile Help & Support Actions */}
+                  <div className="border-t border-gray-200 pt-2 mt-2 space-y-1">
+                    <Link
+                      to="/faq"
+                      className="flex items-center space-x-3 px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-target w-full transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                      <span>FAQ</span>
+                    </Link>
+                    <Link
+                      to="/tutorials"
+                      className="flex items-center space-x-3 px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-target w-full transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <BookOpen className="h-5 w-5" />
+                      <span>Tutorials</span>
+                    </Link>
+                    <Link
+                      to="/support"
+                      className="flex items-center space-x-3 px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-target w-full transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      <span>Contact Support</span>
+                    </Link>
+                  </div>
+
                   {/* Mobile Profile Actions */}
                   <div className="border-t border-gray-200 pt-2 mt-2 space-y-1">
                     <Link
@@ -491,6 +519,35 @@ export const Header: React.FC = () => {
                   >
                     Contact
                   </Link>
+                  
+                  {/* Mobile Help & Support for unauthenticated users */}
+                  <div className="border-t border-gray-200 pt-2 mt-2 space-y-1">
+                    <Link
+                      to="/faq"
+                      className="flex items-center space-x-3 px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-target w-full transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                      <span>FAQ</span>
+                    </Link>
+                    <Link
+                      to="/tutorials"
+                      className="flex items-center space-x-3 px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-target w-full transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <BookOpen className="h-5 w-5" />
+                      <span>Tutorials</span>
+                    </Link>
+                    <Link
+                      to="/support"
+                      className="flex items-center space-x-3 px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-target w-full transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      <span>Contact Support</span>
+                    </Link>
+                  </div>
+                  
                   <div className="border-t border-gray-200 pt-2 mt-2 space-y-2">
                     <Link
                       to="/login"

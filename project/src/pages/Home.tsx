@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, BarChart, GraduationCap, Brain, Target, TestTube2, Rocket, Globe, Laptop, Star, Award, BookOpen as BookOpenIcon } from 'lucide-react';
 import Particles from 'react-tsparticles';
@@ -28,29 +28,48 @@ const GradientBackground = () => {
   );
 };
 
-// Interactive Particles Background
+// Interactive Particles Background (responsive + reduced-motion aware)
 const ParticlesBackground = () => {
+  const shouldReduceMotion = useReducedMotion();
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsSmallScreen('matches' in e ? e.matches : (e as MediaQueryList).matches);
+    handler(mq);
+    mq.addEventListener?.('change', handler as (e: MediaQueryListEvent) => void);
+    return () => mq.removeEventListener?.('change', handler as (e: MediaQueryListEvent) => void);
+  }, []);
+
   const particlesInit = async (engine: Engine) => {
     await loadFull(engine);
   };
+
+  if (shouldReduceMotion) return null;
+
+  const count = isSmallScreen ? 12 : 30;
+  const speed = isSmallScreen ? 0.5 : 1;
+  const distance = isSmallScreen ? 120 : 150;
 
   return (
     <Particles
       id="tsparticles"
       init={particlesInit}
       options={{
+        fpsLimit: 60,
+        detectRetina: true,
         particles: {
-          number: { value: 30 },
+          number: { value: count },
           color: { value: '#ffffff' },
           opacity: { value: 0.1 },
           size: { value: 1 },
           links: {
             enable: true,
             color: '#ffffff',
-            opacity: 0.1,
-            distance: 150
+            opacity: 0.08,
+            distance
           },
-          move: { enable: true, speed: 1 }
+          move: { enable: true, speed }
         }
       }}
       className="absolute inset-0 opacity-30"
@@ -60,6 +79,7 @@ const ParticlesBackground = () => {
 
 // Enhanced Mascot with SVG Morphing
 const Mascot = () => {
+  const shouldReduceMotion = useReducedMotion();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -70,11 +90,11 @@ const Mascot = () => {
       style={{ position: 'relative' }}
     >
       <motion.div
-        animate={{
+        animate={shouldReduceMotion ? undefined : {
           rotate: hovered ? [0, 15, -15, 0] : 0,
           y: hovered ? [-10, 10, -10] : 0
         }}
-        transition={{ 
+        transition={shouldReduceMotion ? undefined : { 
           duration: 2,
           repeat: Infinity,
           type: 'keyframes'
@@ -108,20 +128,24 @@ const StatCard = ({ number, label }: StatCardProps) => {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (isInView) {
-      const animate = () => {
-        setCount((prev) => {
-          const next = prev + Math.ceil(number / 20);
-          return next >= number ? number : next;
-        });
-      };
-      const interval = setInterval(animate, 50);
-      if (count >= number) clearInterval(interval);
-      return () => clearInterval(interval);
+    if (!isInView) return;
+    if (shouldReduceMotion) {
+      setCount(number);
+      return;
     }
-  }, [isInView, number, count]);
+    const animate = () => {
+      setCount((prev) => {
+        const next = prev + Math.ceil(number / 20);
+        return next >= number ? number : next;
+      });
+    };
+    const interval = setInterval(animate, 50);
+    if (count >= number) clearInterval(interval);
+    return () => clearInterval(interval);
+  }, [isInView, number, count, shouldReduceMotion]);
 
   return (
     <motion.div
@@ -225,7 +249,7 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
       className="group perspective-1000"
     >
       <motion.div
-        className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
+        className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
         whileHover={{ rotateY: 10, rotateX: 5 }}
       >
         <div className="flex flex-col items-center text-center">
@@ -238,7 +262,10 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
               <img 
                 src={photo} 
                 alt={name}
-                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width:1024px) 8rem, (min-width:640px) 6rem, 6rem"
+                className="w-full h-full object-cover media-fluid"
                 onError={(e) => {
                   // Create a fallback SVG with the person's initial
                   const svg = `
@@ -258,8 +285,8 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
           </motion.div>
 
           {/* Name and Title */}
-          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">{name}</h3>
-          <p className="text-sm sm:text-base text-purple-200 font-medium mb-3">{title}</p>
+          <h3 className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl font-bold text-white mb-2">{name}</h3>
+          <p className="text-fluid-sm sm:text-fluid-base text-purple-200 font-medium mb-3">{title}</p>
           
           {/* Specialization */}
           <div className="mb-4 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-purple-500/20 text-purple-200 border border-purple-400/30">
@@ -319,7 +346,7 @@ const DeveloperCard = ({ name, role, specialization, year, photo, email, github,
       className="group perspective-1000"
     >
       <motion.div
-        className="relative h-full bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
+        className="relative h-full bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
         whileHover={{ rotateY: 10, rotateX: 5 }}
       >
         <div className="flex flex-col items-center text-center">
@@ -332,7 +359,10 @@ const DeveloperCard = ({ name, role, specialization, year, photo, email, github,
               <img 
                 src={photo} 
                 alt={name}
-                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width:1024px) 8rem, (min-width:640px) 6rem, 6rem"
+                className="w-full h-full object-cover media-fluid"
                 onError={(e) => {
                   // Create a fallback SVG with the person's initial
                   const svg = `
@@ -352,8 +382,8 @@ const DeveloperCard = ({ name, role, specialization, year, photo, email, github,
           </motion.div>
 
           {/* Name and Role */}
-          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">{name}</h3>
-          <p className="text-sm sm:text-base text-cyan-200 font-medium mb-2">{role}</p>
+          <h3 className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl font-bold text-white mb-2">{name}</h3>
+          <p className="text-fluid-sm sm:text-fluid-base text-cyan-200 font-medium mb-2">{role}</p>
           
           {/* Email */}
           {email && (
@@ -646,8 +676,10 @@ const Home: React.FC = () => {
     }
   ];
 
+  const shouldReduceMotion = useReducedMotion();
+
   return (
-    <div ref={containerRef} className="relative min-h-screen overflow-hidden" style={{ position: 'relative' }}>
+    <div ref={containerRef} className="relative min-h-screen overflow-hidden content-visibility-auto cis-800 container-inline" style={{ position: 'relative' }}>
       {/* Progress Bar */}
       <motion.div 
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 z-50"
@@ -657,11 +689,11 @@ const Home: React.FC = () => {
       <GradientBackground />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 xs:px-6 sm:px-8 lg:px-12 py-8 sm:py-12 lg:py-16 xl:py-20" style={{ position: 'relative' }}>
+      <section className="relative min-h-screen flex items-center justify-center px-4 xs:px-6 sm:px-8 lg:px-12 py-8 sm:py-12 lg:py-16 xl:py-20 content-visibility-auto cis-800 isolate-layer" style={{ position: 'relative' }}>
         <div className="max-w-6xl mx-auto text-center">
           <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            initial={shouldReduceMotion ? undefined : { scale: 0 }}
+            animate={shouldReduceMotion ? undefined : { scale: 1 }}
             transition={{ type: 'spring', stiffness: 100 }}
             className="mb-6 sm:mb-8 lg:mb-12 xl:mb-16"
             style={{ position: 'relative' }}
@@ -671,34 +703,35 @@ const Home: React.FC = () => {
 
           <h1 className="text-fluid-4xl sm:text-fluid-5xl lg:text-fluid-6xl xl:text-fluid-7xl font-bold text-white mb-4 sm:mb-6 lg:mb-8 leading-tight px-4">
             Transform Your
-            <TypeAnimation
-              sequence={[
-                'Learning',
-                2000,
-                'Future',
-                2000,
-                'Career',
-                2000
-              ]}
-              wrapper="div"
-              cursor={true}
-              repeat={Infinity}
-              className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300"
-            />
+            {shouldReduceMotion ? (
+              <div className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">Learning</div>
+            ) : (
+              <TypeAnimation
+                sequence={['Learning', 2000, 'Future', 2000, 'Career', 2000]}
+                wrapper="div"
+                cursor={true}
+                repeat={Infinity}
+                className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300"
+              />
+            )}
           </h1>
 
           <p className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl text-indigo-100 mb-6 sm:mb-8 lg:mb-10 xl:mb-12 max-w-3xl mx-auto px-4">
-            <TypeAnimation
-              sequence={[
-                'Join thousands mastering their subjects with our intelligent platform...',
-                3000,
-                'Experience education reimagined through AI and expert insights...',
-                3000
-              ]}
-              wrapper="span"
-              cursor={true}
-              repeat={Infinity}
-            />
+            {shouldReduceMotion ? (
+              <span>Join thousands mastering their subjects with our intelligent platform...</span>
+            ) : (
+              <TypeAnimation
+                sequence={[
+                  'Join thousands mastering their subjects with our intelligent platform...',
+                  3000,
+                  'Experience education reimagined through AI and expert insights...',
+                  3000
+                ]}
+                wrapper="span"
+                cursor={true}
+                repeat={Infinity}
+              />
+            )}
           </p>
 
           <motion.div 
@@ -722,9 +755,9 @@ const Home: React.FC = () => {
           </motion.div>
 
           <motion.div 
-            className="mt-8 sm:mt-12 lg:mt-16 xl:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="mt-8 sm:mt-12 lg:mt-16 xl:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-4 content-visibility-auto cis-600"
+            initial={shouldReduceMotion ? undefined : { opacity: 0 }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1 }}
             transition={{ delay: 0.7 }}
             style={{ position: 'relative' }}
           >
@@ -736,7 +769,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative content-visibility-auto cis-800 isolate-layer" style={{ position: 'relative' }}>
         <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
             className="text-center mb-8 sm:mb-12 lg:mb-16 xl:mb-24"
@@ -753,7 +786,7 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 content-visibility-auto cis-600" style={{ position: 'relative' }}>
             {features.map((feature) => (
               <FeatureCard 
                 key={feature.title}
@@ -765,7 +798,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Additional Features Section */}
-      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative content-visibility-auto cis-800 isolate-layer" style={{ position: 'relative' }}>
         <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
             className="text-center mb-12 sm:mb-16 lg:mb-24"
@@ -782,7 +815,7 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 content-visibility-auto cis-600" style={{ position: 'relative' }}>
             {additionalFeatures.map((feature, index) => (
               <motion.div 
                 key={index} 
@@ -820,7 +853,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Meet Our Guides Section */}
-      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative content-visibility-auto cis-800 isolate-layer" style={{ position: 'relative' }}>
         <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
             className="text-center mb-12 sm:mb-16 lg:mb-24"
@@ -837,7 +870,7 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 xl:gap-12 content-visibility-auto cis-600" style={{ position: 'relative' }}>
             {guides.map((guide, index) => (
               <GuideCard 
                 key={index}
@@ -849,7 +882,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Meet Our Developers Section */}
-      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative content-visibility-auto cis-800 isolate-layer" style={{ position: 'relative' }}>
         <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
             className="text-center mb-12 sm:mb-16 lg:mb-24"
@@ -866,7 +899,7 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 content-visibility-auto cis-600" style={{ position: 'relative' }}>
             {developers.map((developer, index) => (
               <DeveloperCard 
                 key={index}
