@@ -45,14 +45,24 @@ class LoggingService {
     userId?: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      // Check if user is authenticated first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // If not authenticated, just log locally and return
+        console.log(`📝 Activity logged locally (unauthenticated): ${actionType}`, actionDetails);
+        return { success: true };
+      }
+
       // Get current user if not provided
-      const currentUserId = userId || (await supabase.auth.getUser()).data.user?.id;
+      const currentUserId = userId || user.id;
       
       // Get client information
       const userAgent = navigator.userAgent;
-      const sessionId = (await supabase.auth.getSession()).data.session?.access_token?.substring(0, 20);
+      const { data: { session } } = await supabase.auth.getSession();
+      const sessionId = session?.access_token?.substring(0, 20);
 
-      // Try to insert directly into system_logs table instead of using RPC
+      // Try to insert directly into system_logs table
       const { error } = await supabase
         .from('system_logs')
         .insert([{
@@ -65,19 +75,17 @@ class LoggingService {
         }]);
 
       if (error) {
-        // If RLS policy fails, log to console only and continue
-        if (error.code === '42501') {
-          console.log(`📝 Activity logged locally: ${actionType}`, actionDetails);
-        } else {
-          console.warn('Failed to log activity (this is non-critical):', error.message);
-        }
-        // Don't return error - logging should not break the main flow
+        // Log locally if database insert fails
+        console.log(`📝 Activity logged locally: ${actionType}`, actionDetails);
+        console.warn('Database logging failed (non-critical):', error.message);
       }
 
       return { success: true };
     } catch (error: unknown) {
-      console.error('Logging service error:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      // Always log locally on any error
+      console.log(`📝 Activity logged locally: ${actionType}`, actionDetails);
+      console.warn('Logging service error (non-critical):', error);
+      return { success: true }; // Don't break the main flow
     }
   }
 
@@ -86,6 +94,14 @@ class LoggingService {
    */
   async getLogs(filters: LogFilters = {}): Promise<{ data: LogEntry[] | null; error: string | null }> {
     try {
+      // Check if user is authenticated first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated, cannot fetch logs');
+        return { data: [], error: null }; // Return empty array instead of error
+      }
+
       let query = supabase
         .from('system_logs')
         .select(`
@@ -133,12 +149,14 @@ class LoggingService {
       const { data, error } = await query;
 
       if (error) {
-        return { data: null, error: error.message };
+        console.warn('Failed to fetch logs:', error.message);
+        return { data: [], error: null }; // Return empty array instead of error
       }
 
       return { data: data as LogEntry[], error: null };
     } catch (error: unknown) {
-      return { data: null, error: error instanceof Error ? error.message : 'Unknown error' };
+      console.warn('Logging service error:', error);
+      return { data: [], error: null }; // Return empty array instead of error
     }
   }
 

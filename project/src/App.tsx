@@ -10,7 +10,6 @@ import { analyticsSettings } from './config/environment';
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import SplashScreen from "./components/splashScreen";
-import FloatingChatButton from "./components/FloatingChatButton";
 import { Login } from "./pages/Login";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { NewStudentDashboard } from './pages/NewStudentDashboard';
@@ -67,6 +66,8 @@ const LoadingScreen = () => (
     <div className="w-16 h-16 border-t-4 border-b-4 border-white rounded-full animate-spin" />
   </div>
 );
+
+
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -171,8 +172,6 @@ const App: React.FC = () => {
           </Routes>
         </main>
         <Footer />
-        {/* Floating Chat Button - Available globally */}
-        <FloatingChatButton />
         {/* Only load analytics based on configuration */}
         {analyticsSettings.enableVercelAnalytics && <Analytics />}
       </div>

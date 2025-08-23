@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, BarChart, GraduationCap, Brain, Target, TestTube2, Rocket, Globe, Laptop, Star, Award, BookOpen as BookOpenIcon } from 'lucide-react';
 import Particles from 'react-tsparticles';
 import { loadFull } from 'tsparticles';
@@ -40,7 +40,7 @@ const ParticlesBackground = () => {
       init={particlesInit}
       options={{
         particles: {
-          number: { value: 50 },
+          number: { value: 30 },
           color: { value: '#ffffff' },
           opacity: { value: 0.1 },
           size: { value: 1 },
@@ -64,9 +64,10 @@ const Mascot = () => {
 
   return (
     <motion.div 
-      className="relative w-48 h-48"
+      className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
+      style={{ position: 'relative' }}
     >
       <motion.div
         animate={{
@@ -86,9 +87,9 @@ const Mascot = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute -top-4 -right-4"
+              className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4"
             >
-              <Rocket className="w-12 h-12 text-purple-400 animate-pulse" />
+              <Rocket className="w-8 h-8 sm:w-12 sm:h-12 text-purple-400 animate-pulse" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -125,8 +126,9 @@ const StatCard = ({ number, label }: StatCardProps) => {
   return (
     <motion.div
       ref={ref}
-      className="bg-white/5 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center border border-white/10 shadow-xl"
+      className="bg-white/5 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center border border-white/10 shadow-xl touch-target"
       whileHover={{ scale: 1.05 }}
+      style={{ position: 'relative' }}
     >
       <div className="text-fluid-2xl sm:text-fluid-3xl lg:text-fluid-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
         {count.toLocaleString()}+
@@ -183,7 +185,7 @@ const FeatureCard = ({ icon: Icon, title, description }: FeatureCardProps) => {
   return (
     <motion.div
       ref={ref}
-      style={{ scale, opacity }}
+      style={{ scale, opacity, position: 'relative' }}
       className="group perspective-1000"
     >
       <motion.div
@@ -195,7 +197,7 @@ const FeatureCard = ({ icon: Icon, title, description }: FeatureCardProps) => {
             className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg"
             whileHover={{ scale: 1.1 }}
           >
-            <Icon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
+            <Icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-white" />
           </motion.div>
           <h3 className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl font-bold text-white mb-3 sm:mb-4">{title}</h3>
           <p className="text-fluid-sm sm:text-fluid-base text-indigo-100 leading-relaxed">{description}</p>
@@ -206,7 +208,7 @@ const FeatureCard = ({ icon: Icon, title, description }: FeatureCardProps) => {
 };
 
 // Guide Card Component
-const GuideCard = ({ name, title, specialization, experience, achievements, photo, contact, email, researchInterests, courses }: GuideCardProps) => {
+const GuideCard = ({ name, title, specialization, experience, achievements, photo, contact, email }: GuideCardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -219,20 +221,20 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
   return (
     <motion.div
       ref={ref}
-      style={{ scale, opacity }}
+      style={{ scale, opacity, position: 'relative' }}
       className="group perspective-1000"
     >
       <motion.div
-        className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
+        className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
         whileHover={{ rotateY: 10, rotateX: 5 }}
       >
         <div className="flex flex-col items-center text-center">
           {/* Profile Photo */}
           <motion.div 
-            className="mb-6 relative"
+            className="mb-4 sm:mb-6 relative"
             whileHover={{ scale: 1.05 }}
           >
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-400/30 shadow-xl">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-purple-400/30 shadow-xl">
               <img 
                 src={photo} 
                 alt={name}
@@ -251,21 +253,21 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
               />
             </div>
             <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-2 shadow-lg">
-              <Award className="w-6 h-6 text-white" />
+              <Award className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
           </motion.div>
 
           {/* Name and Title */}
-          <h3 className="text-2xl font-bold text-white mb-2">{name}</h3>
-          <p className="text-purple-200 font-medium mb-3">{title}</p>
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">{name}</h3>
+          <p className="text-sm sm:text-base text-purple-200 font-medium mb-3">{title}</p>
           
           {/* Specialization */}
-          <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-200 border border-purple-400/30">
+          <div className="mb-4 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-purple-500/20 text-purple-200 border border-purple-400/30">
             {specialization}
           </div>
 
           {/* Experience */}
-          <p className="text-indigo-100 text-sm mb-4">
+          <p className="text-indigo-100 text-xs sm:text-sm mb-4">
             <span className="font-semibold">Experience:</span> {experience}
           </p>
 
@@ -281,11 +283,9 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
             </p>
           )}
 
-
-
           {/* Achievements */}
           <div className="space-y-2">
-            <p className="text-indigo-100 text-sm font-semibold">Key Achievements:</p>
+            <p className="text-indigo-100 text-xs sm:text-sm font-semibold">Key Achievements:</p>
             <ul className="space-y-1">
               {achievements.map((achievement, index) => (
                 <li key={index} className="flex items-start text-indigo-100 text-xs">
@@ -302,7 +302,7 @@ const GuideCard = ({ name, title, specialization, experience, achievements, phot
 };
 
 // Developer Card Component
-const DeveloperCard = ({ name, role, specialization, year, achievements, photo, contact, email, skills, github, linkedin }: DeveloperCardProps) => {
+const DeveloperCard = ({ name, role, specialization, year, photo, email, github, linkedin }: DeveloperCardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -315,20 +315,20 @@ const DeveloperCard = ({ name, role, specialization, year, achievements, photo, 
   return (
     <motion.div
       ref={ref}
-      style={{ scale, opacity }}
+      style={{ scale, opacity, position: 'relative' }}
       className="group perspective-1000"
     >
       <motion.div
-        className="relative h-full bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-3xl p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
+        className="relative h-full bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
         whileHover={{ rotateY: 10, rotateX: 5 }}
       >
         <div className="flex flex-col items-center text-center">
           {/* Profile Photo */}
           <motion.div 
-            className="mb-6 relative"
+            className="mb-4 sm:mb-6 relative"
             whileHover={{ scale: 1.05 }}
           >
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-cyan-400/30 shadow-xl">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-cyan-400/30 shadow-xl">
               <img 
                 src={photo} 
                 alt={name}
@@ -347,32 +347,30 @@ const DeveloperCard = ({ name, role, specialization, year, achievements, photo, 
               />
             </div>
             <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full p-2 shadow-lg">
-              <BookOpenIcon className="w-6 h-6 text-white" />
+              <BookOpenIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
           </motion.div>
 
           {/* Name and Role */}
-          <h3 className="text-2xl font-bold text-white mb-2">{name}</h3>
-          <p className="text-cyan-200 font-medium mb-2">{role}</p>
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">{name}</h3>
+          <p className="text-sm sm:text-base text-cyan-200 font-medium mb-2">{role}</p>
           
           {/* Email */}
           {email && (
-            <p className="text-cyan-100 text-sm mb-3">
+            <p className="text-cyan-100 text-xs sm:text-sm mb-3">
               {email}
             </p>
           )}
           
           {/* Specialization */}
-          <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-500/20 text-cyan-200 border border-cyan-400/30">
+          <div className="mb-4 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-cyan-500/20 text-cyan-200 border border-cyan-400/30">
             {specialization}
           </div>
 
           {/* Year */}
-          <p className="text-cyan-100 text-sm mb-4">
+          <p className="text-cyan-100 text-xs sm:text-sm mb-4">
             {year}
           </p>
-
-
 
           {/* Social Links */}
           {(github || linkedin) && (
@@ -382,7 +380,7 @@ const DeveloperCard = ({ name, role, specialization, year, achievements, photo, 
                   href={github} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
+                  className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors touch-target"
                 >
                   <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -394,7 +392,7 @@ const DeveloperCard = ({ name, role, specialization, year, achievements, photo, 
                   href={linkedin} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors"
+                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors touch-target"
                 >
                   <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -649,7 +647,7 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div ref={containerRef} className="relative min-h-screen overflow-hidden">
+    <div ref={containerRef} className="relative min-h-screen overflow-hidden" style={{ position: 'relative' }}>
       {/* Progress Bar */}
       <motion.div 
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 z-50"
@@ -659,18 +657,19 @@ const Home: React.FC = () => {
       <GradientBackground />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+      <section className="relative min-h-screen flex items-center justify-center px-4 xs:px-6 sm:px-8 lg:px-12 py-8 sm:py-12 lg:py-16 xl:py-20" style={{ position: 'relative' }}>
         <div className="max-w-6xl mx-auto text-center">
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 100 }}
-            className="mb-8 sm:mb-12 lg:mb-16"
+            className="mb-6 sm:mb-8 lg:mb-12 xl:mb-16"
+            style={{ position: 'relative' }}
           >
             <Mascot />
           </motion.div>
 
-          <h1 className="text-fluid-4xl sm:text-fluid-5xl lg:text-fluid-6xl xl:text-fluid-7xl font-bold text-white mb-6 sm:mb-8 leading-tight px-4">
+          <h1 className="text-fluid-4xl sm:text-fluid-5xl lg:text-fluid-6xl xl:text-fluid-7xl font-bold text-white mb-4 sm:mb-6 lg:mb-8 leading-tight px-4">
             Transform Your
             <TypeAnimation
               sequence={[
@@ -688,7 +687,7 @@ const Home: React.FC = () => {
             />
           </h1>
 
-          <p className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl text-indigo-100 mb-8 sm:mb-10 lg:mb-12 max-w-3xl mx-auto px-4">
+          <p className="text-fluid-lg sm:text-fluid-xl lg:text-fluid-2xl text-indigo-100 mb-6 sm:mb-8 lg:mb-10 xl:mb-12 max-w-3xl mx-auto px-4">
             <TypeAnimation
               sequence={[
                 'Join thousands mastering their subjects with our intelligent platform...',
@@ -703,29 +702,31 @@ const Home: React.FC = () => {
           </p>
 
           <motion.div 
-            className="flex flex-wrap justify-center gap-4 sm:gap-6 px-4"
+            className="flex flex-wrap justify-center gap-3 sm:gap-4 lg:gap-6 px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
+            style={{ position: 'relative' }}
           >
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/login')}
-              className="btn-responsive group text-fluid-base sm:text-fluid-lg font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white min-h-[44px]"
+              className="btn-responsive group text-fluid-base sm:text-fluid-lg font-semibold px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white touch-target shadow-lg hover:shadow-xl"
             >
               <span className="flex items-center space-x-2 sm:space-x-3">
-                <Rocket className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Rocket className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
                 <span>Launch Your Journey</span>
               </span>
             </motion.button>
           </motion.div>
 
           <motion.div 
-            className="mt-12 sm:mt-16 lg:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-4"
+            className="mt-8 sm:mt-12 lg:mt-16 xl:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
+            style={{ position: 'relative' }}
           >
             <StatCard number={10000} label="Active Learners" />
             <StatCard number={95} label="Success Rate" />
@@ -735,13 +736,14 @@ const Home: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 relative">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+        <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
-            className="text-center mb-12 sm:mb-16 lg:mb-24"
+            className="text-center mb-8 sm:mb-12 lg:mb-16 xl:mb-24"
             initial={{ y: 50 }}
             whileInView={{ y: 0 }}
             viewport={{ once: true }}
+            style={{ position: 'relative' }}
           >
             <h2 className="text-fluid-3xl sm:text-fluid-4xl lg:text-fluid-5xl font-bold text-white mb-4 sm:mb-6 px-4">
               Revolutionary Features
@@ -751,7 +753,7 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
             {features.map((feature) => (
               <FeatureCard 
                 key={feature.title}
@@ -763,23 +765,24 @@ const Home: React.FC = () => {
       </section>
 
       {/* Additional Features Section */}
-      <section className="py-32 px-4 relative">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+        <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
-            className="text-center mb-24"
+            className="text-center mb-12 sm:mb-16 lg:mb-24"
             initial={{ y: 50 }}
             whileInView={{ y: 0 }}
             viewport={{ once: true }}
+            style={{ position: 'relative' }}
           >
-            <h2 className="text-5xl font-bold text-white mb-6">
+            <h2 className="text-fluid-3xl sm:text-fluid-4xl lg:text-fluid-5xl font-bold text-white mb-4 sm:mb-6">
               Everything you need to excel
             </h2>
-            <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
+            <p className="text-fluid-lg sm:text-fluid-xl text-indigo-100 max-w-2xl mx-auto">
               Comprehensive tools for both students and teachers
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
             {additionalFeatures.map((feature, index) => (
               <motion.div 
                 key={index} 
@@ -788,22 +791,25 @@ const Home: React.FC = () => {
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
+                style={{ position: 'relative' }}
               >
                 <motion.div
-                  className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
+                  className="relative h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-6 sm:p-8 backdrop-blur-xl border border-white/10 shadow-2xl transform-style-preserve-3d"
                   whileHover={{ rotateY: 10, rotateX: 5 }}
+                  style={{ position: 'relative' }}
                 >
                   <div className="flex flex-col items-center text-center">
                     <motion.div 
-                      className="mb-6 p-4 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg"
+                      className="mb-4 sm:mb-6 p-4 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg"
                       whileHover={{ scale: 1.1 }}
+                      style={{ position: 'relative' }}
                     >
-                      {React.createElement(feature.icon, { className: "w-12 h-12 text-white" })}
+                      {React.createElement(feature.icon, { className: "w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" })}
                     </motion.div>
                     <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-200 border border-purple-400/30">
                       {feature.forRole}
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">{feature.title}</h3>
                     <p className="text-indigo-100 leading-relaxed">{feature.description}</p>
                   </div>
                 </motion.div>
@@ -814,23 +820,24 @@ const Home: React.FC = () => {
       </section>
 
       {/* Meet Our Guides Section */}
-      <section className="py-32 px-4 relative">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+        <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
-            className="text-center mb-24"
+            className="text-center mb-12 sm:mb-16 lg:mb-24"
             initial={{ y: 50 }}
             whileInView={{ y: 0 }}
             viewport={{ once: true }}
+            style={{ position: 'relative' }}
           >
-            <h2 className="text-5xl font-bold text-white mb-6">
+            <h2 className="text-fluid-3xl sm:text-fluid-4xl lg:text-fluid-5xl font-bold text-white mb-4 sm:mb-6">
               Meet Our Guides
             </h2>
-            <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
+            <p className="text-fluid-lg sm:text-fluid-xl text-indigo-100 max-w-2xl mx-auto">
               Learn from distinguished professors and industry experts who are passionate about your success
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
             {guides.map((guide, index) => (
               <GuideCard 
                 key={index}
@@ -842,23 +849,24 @@ const Home: React.FC = () => {
       </section>
 
       {/* Meet Our Developers Section */}
-      <section className="py-32 px-4 relative">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-16 sm:py-24 lg:py-32 px-4 xs:px-6 sm:px-8 lg:px-12 relative" style={{ position: 'relative' }}>
+        <div className="max-w-7xl mx-auto" style={{ position: 'relative' }}>
           <motion.div 
-            className="text-center mb-24"
+            className="text-center mb-12 sm:mb-16 lg:mb-24"
             initial={{ y: 50 }}
             whileInView={{ y: 0 }}
             viewport={{ once: true }}
+            style={{ position: 'relative' }}
           >
-            <h2 className="text-5xl font-bold text-white mb-6">
+            <h2 className="text-fluid-3xl sm:text-fluid-4xl lg:text-fluid-5xl font-bold text-white mb-4 sm:mb-6">
               Meet Our Developers
             </h2>
-            <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
+            <p className="text-fluid-lg sm:text-fluid-xl text-indigo-100 max-w-2xl mx-auto">
               Talented students who brought this platform to life with their innovative coding skills
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-12" style={{ position: 'relative' }}>
             {developers.map((developer, index) => (
               <DeveloperCard 
                 key={index}
@@ -868,8 +876,6 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
-
-
     </div>
   );
 };
