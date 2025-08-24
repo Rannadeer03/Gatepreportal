@@ -61,6 +61,7 @@ import StudentAcademicVideoTutorials from './pages/StudentAcademicVideoTutorials
 import PerformanceDashboard from './pages/PerformanceDashboard';
 import ResumeBuilder from './pages/ResumeBuilder';
 
+
 // Simple loading screen component
 const LoadingScreen = () => (
   <div className="fixed inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">

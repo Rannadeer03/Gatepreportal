@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User, Minimize2, Maximize2 } from 'lucide-react';
-import aiChatService from '../services/aiChatService';
+import { aiChatService } from '../services/aiChatService';
 
 interface Message {
   id: string;
@@ -51,7 +51,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ isOpen, onClose, onMinimize, isMini
       const response = await aiChatService.generateResponse(userMessage);
       return response.text;
     } catch (error) {
-      console.error('AI response generation error:', error);
+      // Silent error handling for security
       return "I'm sorry, I'm experiencing some technical difficulties. Please try again in a moment or contact our support team via email.";
     }
   };
