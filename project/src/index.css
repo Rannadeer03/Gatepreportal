@@ -530,4 +530,15 @@
   .skip-link:focus {
     top: 6px;
   }
+
+  /* Print styles for resume builder */
+  @media print {
+    @page { size: A4 portrait; margin: 12mm; }
+    body { background: white !important; color: #111827 !important; }
+    .print-area { box-shadow: none !important; border: 0 !important; }
+    .no-print { display: none !important; }
+    .print-break-avoid { break-inside: avoid; }
+    .print-break-before { break-before: page; }
+    .print-break-after { break-after: page; }
+  }
 }

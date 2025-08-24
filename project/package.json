@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "NODE_ENV=production vite build",
+    "build:secure": "NODE_ENV=production vite build --mode production",
     "preview": "vite preview"
   },
   "dependencies": {

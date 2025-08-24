@@ -6,6 +6,7 @@ import { monitoringService } from './services/monitoringService';
 import { performanceService } from './services/performanceService';
 import { adBlockerService } from './services/adBlockerService';
 import { analyticsSettings } from './config/environment';
+import './config/security'; // Import security configuration
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -85,7 +86,7 @@ const App: React.FC = () => {
         // Initialize ad blocker detection
         await adBlockerService.init();
       } catch (error) {
-        console.error('Failed to initialize app:', error);
+        // Silent error handling for security
       } finally {
         // Set loading to false after auth initialization
         setLoading(false);
@@ -167,6 +168,7 @@ const App: React.FC = () => {
              <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
              <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
              <Route path="/resume-builder" element={<ResumeBuilder />} />
+
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

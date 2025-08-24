@@ -144,12 +144,12 @@ class MonitoringService {
         );
 
       if (error) {
-        console.error('Failed to flush performance metrics:', error);
+        // Silent error handling for security
       } else {
         this.performanceMetrics = [];
       }
     } catch (error) {
-      console.error('Error flushing performance metrics:', error);
+      // Silent error handling for security
     }
   }
 
@@ -170,12 +170,12 @@ class MonitoringService {
         );
 
       if (error) {
-        console.error('Failed to flush error reports:', error);
+        // Silent error handling for security
       } else {
         this.errorReports = [];
       }
     } catch (error) {
-      console.error('Error flushing error reports:', error);
+      // Silent error handling for security
     }
   }
 
@@ -209,7 +209,7 @@ class MonitoringService {
       this.trackSessionDuration(sessionDuration);
     });
 
-    console.log('Monitoring service initialized');
+    // Monitoring service initialized silently for security
   }
 }
 

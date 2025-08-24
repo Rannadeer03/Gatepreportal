@@ -49,8 +49,7 @@ class LoggingService {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // If not authenticated, just log locally and return
-        console.log(`📝 Activity logged locally (unauthenticated): ${actionType}`, actionDetails);
+        // If not authenticated, just log locally and return silently
         return { success: true };
       }
 
@@ -75,16 +74,12 @@ class LoggingService {
         }]);
 
       if (error) {
-        // Log locally if database insert fails
-        console.log(`📝 Activity logged locally: ${actionType}`, actionDetails);
-        console.warn('Database logging failed (non-critical):', error.message);
+        // Log locally if database insert fails (silent for security)
       }
 
       return { success: true };
     } catch (error: unknown) {
-      // Always log locally on any error
-      console.log(`📝 Activity logged locally: ${actionType}`, actionDetails);
-      console.warn('Logging service error (non-critical):', error);
+      // Always log locally on any error (silent for security)
       return { success: true }; // Don't break the main flow
     }
   }
@@ -98,7 +93,6 @@ class LoggingService {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        console.warn('User not authenticated, cannot fetch logs');
         return { data: [], error: null }; // Return empty array instead of error
       }
 
