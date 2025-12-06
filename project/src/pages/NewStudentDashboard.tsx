@@ -15,7 +15,8 @@ import {
   Book,
   X,
   TrendingUp,
-  Users
+  Users,
+  Play
 } from 'lucide-react';
 import { TestCompletionStatus } from '../components/TestCompletionStatus';
 import { useAuthStore } from '../store/authStore';
@@ -90,12 +91,12 @@ const GateFeatureCards = [
     action: (navigate: any, _setShowTestsModal: any) => navigate('/gate/progress')
   },
   {
-    id: 'time-management',
-    title: 'Time Management',
-    icon: <Clock className="h-10 w-10" />,
-    description: 'Tips and tools for managing your study time',
+    id: 'video-tutorials',
+    title: 'Video Tutorials',
+    icon: <Play className="h-10 w-10" />,
+    description: 'Watch expert GATE video tutorials and master concepts',
     color: 'bg-purple-500',
-    action: (navigate: any, _setShowTestsModal: any) => navigate('/gate/time-management')
+    action: (navigate: any, _setShowTestsModal: any) => navigate('/gate/video-tutorials')
   },
   {
     id: 'mentorship',

@@ -11,13 +11,12 @@ import {
   Youtube,
   BookOpen,
   Code,
-  Calculator,
-  Atom,
-  FlaskConical,
-  Leaf,
-  BookMarked,
-  Globe,
-  MapPin,
+  Zap,
+  Database,
+  Network,
+  Cpu,
+  Target,
+  Award,
   GraduationCap
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -41,20 +40,22 @@ interface VideoTutorial {
   is_active: boolean;
   teacher_id: string;
   views_count?: number;
+  is_pyq?: boolean;
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
-const subjectIcons: Record<string, React.ReactNode> = {
-  'Computer Science': <Code className="w-6 h-6" />,
-  'Mathematics': <Calculator className="w-6 h-6" />,
-  'Physics': <Atom className="w-6 h-6" />,
-  'Chemistry': <FlaskConical className="w-6 h-6" />,
-  'Biology': <Leaf className="w-6 h-6" />,
-  'English': <BookMarked className="w-6 h-6" />,
-  'History': <BookOpen className="w-6 h-6" />,
-  'Geography': <Globe className="w-6 h-6" />
+const gateSubjectIcons: Record<string, React.ReactNode> = {
+  'Data Structures & Algorithms': <Code className="w-6 h-6" />,
+  'Operating Systems': <Cpu className="w-6 h-6" />,
+  'Database Management': <Database className="w-6 h-6" />,
+  'Computer Networks': <Network className="w-6 h-6" />,
+  'Software Engineering': <Code className="w-6 h-6" />,
+  'Digital Logic': <Zap className="w-6 h-6" />,
+  'Computer Organization': <Cpu className="w-6 h-6" />,
+  'Theory of Computation': <BookOpen className="w-6 h-6" />
 };
 
-const StudentAcademicVideoTutorials: React.FC = () => {
+const GateVideoTutorials: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [tutorials, setTutorials] = useState<VideoTutorial[]>([]);
@@ -67,20 +68,19 @@ const StudentAcademicVideoTutorials: React.FC = () => {
   const [completedVideos, setCompletedVideos] = useState<Set<string>>(new Set());
 
   const subjects = [
-    'Computer Science',
-    'Mathematics',
-    'Physics',
-    'Chemistry',
-    'Biology',
-    'English',
-    'History',
-    'Geography'
+    'Data Structures & Algorithms',
+    'Operating Systems',
+    'Database Management',
+    'Computer Networks',
+    'Software Engineering',
+    'Digital Logic',
+    'Computer Organization',
+    'Theory of Computation'
   ];
 
   useEffect(() => {
     fetchTutorials();
-    // Load completed videos from localStorage or API
-    const saved = localStorage.getItem('completedAcademicVideos');
+    const saved = localStorage.getItem('completedGateVideos');
     if (saved) {
       try {
         setCompletedVideos(new Set(JSON.parse(saved)));
@@ -93,10 +93,13 @@ const StudentAcademicVideoTutorials: React.FC = () => {
   const fetchTutorials = async () => {
     try {
       setLoading(true);
+      // For now, we'll use academic_video_tutorials but filter by subject
+      // In production, you'd have a separate gate_video_tutorials table
       const { data, error } = await supabase
         .from('academic_video_tutorials')
         .select('*')
         .eq('is_active', true)
+        .in('subject', subjects)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -140,7 +143,7 @@ const StudentAcademicVideoTutorials: React.FC = () => {
     const newCompleted = new Set(completedVideos);
     newCompleted.add(videoId);
     setCompletedVideos(newCompleted);
-    localStorage.setItem('completedAcademicVideos', JSON.stringify(Array.from(newCompleted)));
+    localStorage.setItem('completedGateVideos', JSON.stringify(Array.from(newCompleted)));
   };
 
   const filteredTutorials = useMemo(() => {
@@ -173,7 +176,6 @@ const StudentAcademicVideoTutorials: React.FC = () => {
 
   const getVideoStatus = (tutorial: VideoTutorial): 'not_started' | 'in_progress' | 'completed' => {
     if (completedVideos.has(tutorial.id)) return 'completed';
-    // You can add logic to track in-progress videos here
     return 'not_started';
   };
 
@@ -186,42 +188,42 @@ const StudentAcademicVideoTutorials: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-emerald-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading video tutorials...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading GATE video tutorials...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-emerald-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <Button
-              onClick={() => navigate('/student-academic-dashboard')}
+              onClick={() => navigate('/gate-preparation/tests')}
               variant="outline"
               className="flex items-center"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              Back to Academic Dashboard
+              Back to GATE Dashboard
             </Button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold text-blue-900">Academic Video Tutorials</h1>
-                <GraduationCap className="w-6 h-6 text-green-600" />
+                <h1 className="text-3xl font-bold text-indigo-900">GATE Video Tutorials</h1>
+                <Target className="w-6 h-6 text-green-600" />
               </div>
-              <p className="text-gray-600 mt-1">Master your subjects with instructor-led videos</p>
+              <p className="text-gray-600 mt-1">Ace your GATE exam with expert video tutorials</p>
             </div>
           </div>
         </div>
 
         {/* Eco Tip */}
         <VideoEcoTip>
-          Watch videos at 1.5x speed to save time and energy while learning!
+          Review past year videos online — reduce your paper usage and study smarter!
         </VideoEcoTip>
 
         {/* Search and Filter */}
@@ -232,7 +234,7 @@ const StudentAcademicVideoTutorials: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Search tutorials by title or description..."
+                  placeholder="Search GATE tutorials by topic or concept..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
@@ -261,7 +263,7 @@ const StudentAcademicVideoTutorials: React.FC = () => {
         {/* Subject Cards Grid - Show when no subject is selected */}
         {!selectedSubject && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-blue-900 mb-4">Browse by Subject</h2>
+            <h2 className="text-2xl font-bold text-indigo-900 mb-4">Browse by Subject</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {subjects.map(subject => {
                 const stats = getSubjectStats(subject);
@@ -272,7 +274,7 @@ const StudentAcademicVideoTutorials: React.FC = () => {
                     subject={subject}
                     videoCount={stats.total}
                     completedCount={stats.completed}
-                    icon={subjectIcons[subject] || <BookOpen className="w-6 h-6" />}
+                    icon={gateSubjectIcons[subject] || <BookOpen className="w-6 h-6" />}
                     onClick={() => setSelectedSubject(subject)}
                     completedPercent={stats.percent}
                   />
@@ -286,8 +288,8 @@ const StudentAcademicVideoTutorials: React.FC = () => {
         {(selectedSubject || filterSubject !== 'all') && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-blue-900">
-                {selectedSubject ? `${selectedSubject} Videos` : 'All Videos'}
+              <h2 className="text-2xl font-bold text-indigo-900">
+                {selectedSubject ? `${selectedSubject} Videos` : 'All GATE Videos'}
               </h2>
               {selectedSubject && (
                 <Button
@@ -307,8 +309,8 @@ const StudentAcademicVideoTutorials: React.FC = () => {
                   title: tutorial.title,
                   duration: formatDuration(tutorial.duration),
                   status: getVideoStatus(tutorial),
-                  isImportant: false, // You can add this field to your database
-                  isPYQ: false // You can add this field to your database
+                  isImportant: tutorial.difficulty === 'hard',
+                  isPYQ: tutorial.is_pyq || false
                 }))}
               onPlay={(id) => {
                 const tutorial = tutorials.find(t => t.id === id);
@@ -319,19 +321,6 @@ const StudentAcademicVideoTutorials: React.FC = () => {
                 if (tutorial) handleVideoClick(tutorial);
               }}
             />
-          </div>
-        )}
-
-        {filteredTutorials.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-2xl shadow-md">
-            <Youtube className="h-16 w-16 text-blue-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No video tutorials found</h3>
-            <p className="text-gray-600 mb-4">
-              {searchQuery || filterSubject !== 'all' 
-                ? 'Try adjusting your search or filter criteria.'
-                : 'No video tutorials are available at the moment. Check back later!'
-              }
-            </p>
           </div>
         )}
       </div>
@@ -373,11 +362,25 @@ const StudentAcademicVideoTutorials: React.FC = () => {
                   <p className="text-gray-600">{selectedTutorial.description}</p>
                 </div>
                 
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-4">
-                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                <div className="flex items-center justify-between text-sm flex-wrap gap-2">
+                  <div className="flex items-center space-x-4 flex-wrap">
+                    <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium">
                       {selectedTutorial.subject}
                     </span>
+                    {selectedTutorial.is_pyq && (
+                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                        Previous Year Question
+                      </span>
+                    )}
+                    {selectedTutorial.difficulty && (
+                      <span className={`px-3 py-1 rounded-full font-medium ${
+                        selectedTutorial.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                        selectedTutorial.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedTutorial.difficulty}
+                      </span>
+                    )}
                     <div className="flex items-center space-x-1 text-gray-500">
                       <Eye className="h-4 w-4" />
                       <span>{selectedTutorial.views_count || 0} views</span>
@@ -399,7 +402,7 @@ const StudentAcademicVideoTutorials: React.FC = () => {
                   </Button>
                   <Button
                     onClick={() => setShowVideoModal(false)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
                   >
                     Close
                   </Button>
@@ -413,4 +416,5 @@ const StudentAcademicVideoTutorials: React.FC = () => {
   );
 };
 
-export default StudentAcademicVideoTutorials;
+export default GateVideoTutorials;
+

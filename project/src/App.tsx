@@ -58,6 +58,13 @@ import Support from './pages/Support';
 import Tutorials from './pages/Tutorials';
 import AcademicVideoTutorials from './pages/AcademicVideoTutorials';
 import StudentAcademicVideoTutorials from './pages/StudentAcademicVideoTutorials';
+import GateVideoTutorials from './pages/GateVideoTutorials';
+import AcademicProgressTracker from './pages/AcademicProgressTracker';
+import GateProgressTracker from './pages/GateProgressTracker';
+import TimeManagement from './pages/TimeManagement';
+import Mentorship from './pages/Mentorship';
+import GateMentorship from './pages/GateMentorship';
+import GateSchedule from './pages/GateSchedule';
 import PerformanceDashboard from './pages/PerformanceDashboard';
 import ResumeBuilder from './pages/ResumeBuilder';
 
@@ -167,6 +174,13 @@ const App: React.FC = () => {
              <Route path="/tutorials" element={<Tutorials />} />
              <Route path="/student/academic-video-tutorials" element={<StudentAcademicVideoTutorials />} />
              <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
+             <Route path="/gate/video-tutorials" element={<GateVideoTutorials />} />
+             <Route path="/student/progress-tracker" element={<AcademicProgressTracker />} />
+             <Route path="/gate/progress" element={<GateProgressTracker />} />
+             <Route path="/student/time-management" element={<TimeManagement />} />
+             <Route path="/student/mentorship" element={<Mentorship />} />
+             <Route path="/gate/mentorship" element={<GateMentorship />} />
+             <Route path="/gate/schedule" element={<GateSchedule />} />
              <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
              <Route path="/resume-builder" element={<ResumeBuilder />} />
 
