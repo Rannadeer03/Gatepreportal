@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Play, 
-  Search, 
+import {
+  Play,
+  Search,
   Filter,
   ArrowLeft,
   Eye,
@@ -80,15 +80,8 @@ const GateVideoTutorials: React.FC = () => {
 
   useEffect(() => {
     fetchTutorials();
-    const saved = localStorage.getItem('completedGateVideos');
-    if (saved) {
-      try {
-        setCompletedVideos(new Set(JSON.parse(saved)));
-      } catch (e) {
-        console.error('Error loading completed videos:', e);
-      }
-    }
-  }, []);
+    fetchVideoProgress();
+  }, [user]);
 
   const fetchTutorials = async () => {
     try {
@@ -115,6 +108,27 @@ const GateVideoTutorials: React.FC = () => {
     }
   };
 
+  const fetchVideoProgress = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('video_progress')
+        .select('video_id, completed')
+        .eq('student_id', user.id)
+        .eq('completed', true);
+
+      if (error) {
+        console.error('Error fetching video progress:', error);
+        return;
+      }
+
+      setCompletedVideos(new Set(data?.map(p => p.video_id) || []));
+    } catch (error) {
+      console.error('Error fetching video progress:', error);
+    }
+  };
+
   const handleVideoClick = (tutorial: VideoTutorial) => {
     setSelectedTutorial(tutorial);
     setShowVideoModal(true);
@@ -128,8 +142,8 @@ const GateVideoTutorials: React.FC = () => {
         .eq('id', tutorialId);
 
       if (!error) {
-        setTutorials(prev => prev.map(t => 
-          t.id === tutorialId 
+        setTutorials(prev => prev.map(t =>
+          t.id === tutorialId
             ? { ...t, views_count: (t.views_count || 0) + 1 }
             : t
         ));
@@ -139,17 +153,41 @@ const GateVideoTutorials: React.FC = () => {
     }
   };
 
-  const handleVideoComplete = (videoId: string) => {
-    const newCompleted = new Set(completedVideos);
-    newCompleted.add(videoId);
-    setCompletedVideos(newCompleted);
-    localStorage.setItem('completedGateVideos', JSON.stringify(Array.from(newCompleted)));
+  const handleVideoComplete = async (videoId: string) => {
+    if (!user?.id) return;
+
+    try {
+      // Update database
+      const { error } = await supabase
+        .from('video_progress')
+        .upsert({
+          student_id: user.id,
+          video_id: videoId,
+          completed: true,
+          completed_at: new Date().toISOString(),
+          last_watched_at: new Date().toISOString()
+        }, {
+          onConflict: 'student_id,video_id'
+        });
+
+      if (error) {
+        console.error('Error saving video progress:', error);
+        return;
+      }
+
+      // Update local state
+      const newCompleted = new Set(completedVideos);
+      newCompleted.add(videoId);
+      setCompletedVideos(newCompleted);
+    } catch (error) {
+      console.error('Error saving video progress:', error);
+    }
   };
 
   const filteredTutorials = useMemo(() => {
     return tutorials.filter(tutorial => {
       const matchesSearch = tutorial.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           tutorial.description.toLowerCase().includes(searchQuery.toLowerCase());
+        tutorial.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSubject = filterSubject === 'all' || tutorial.subject === filterSubject;
       return matchesSearch && matchesSubject;
     });
@@ -340,7 +378,7 @@ const GateVideoTutorials: React.FC = () => {
                   ✕
                 </Button>
               </div>
-              
+
               <div className="aspect-video mb-4 rounded-xl overflow-hidden">
                 <iframe
                   src={selectedTutorial.youtube_embed_url}
@@ -361,7 +399,7 @@ const GateVideoTutorials: React.FC = () => {
                   <h3 className="font-semibold text-lg mb-2 text-gray-900">Description</h3>
                   <p className="text-gray-600">{selectedTutorial.description}</p>
                 </div>
-                
+
                 <div className="flex items-center justify-between text-sm flex-wrap gap-2">
                   <div className="flex items-center space-x-4 flex-wrap">
                     <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium">
@@ -373,11 +411,10 @@ const GateVideoTutorials: React.FC = () => {
                       </span>
                     )}
                     {selectedTutorial.difficulty && (
-                      <span className={`px-3 py-1 rounded-full font-medium ${
-                        selectedTutorial.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                        selectedTutorial.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full font-medium ${selectedTutorial.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                          selectedTutorial.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                        }`}>
                         {selectedTutorial.difficulty}
                       </span>
                     )}

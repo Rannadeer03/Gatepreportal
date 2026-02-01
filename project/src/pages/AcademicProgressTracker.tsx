@@ -42,6 +42,45 @@ const AcademicProgressTracker: React.FC = () => {
   useEffect(() => {
     if (user?.id) {
       fetchProgressData();
+
+      // Subscribe to real-time updates for test results
+      const testResultsSubscription = supabase
+        .channel('academic_test_results_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'academic_test_results',
+            filter: `student_id=eq.${user.id}`
+          },
+          () => {
+            fetchProgressData();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to real-time updates for video progress
+      const videoProgressSubscription = supabase
+        .channel('video_progress_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'video_progress',
+            filter: `student_id=eq.${user.id}`
+          },
+          () => {
+            fetchProgressData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        testResultsSubscription.unsubscribe();
+        videoProgressSubscription.unsubscribe();
+      };
     }
   }, [user]);
 
@@ -88,14 +127,15 @@ const AcademicProgressTracker: React.FC = () => {
 
       setVideos(videosData || []);
 
-      // Load completed videos
-      const saved = localStorage.getItem('completedAcademicVideos');
-      if (saved) {
-        try {
-          setCompletedVideos(new Set(JSON.parse(saved)));
-        } catch (e) {
-          console.error('Error loading completed videos:', e);
-        }
+      // Fetch video progress from database
+      const { data: progressData } = await supabase
+        .from('video_progress')
+        .select('video_id, completed')
+        .eq('student_id', user?.id)
+        .eq('completed', true);
+
+      if (progressData) {
+        setCompletedVideos(new Set(progressData.map(p => p.video_id)));
       }
     } catch (error) {
       console.error('Error fetching progress data:', error);
@@ -119,10 +159,10 @@ const AcademicProgressTracker: React.FC = () => {
     // Concept Mastery: Average test score
     const conceptMastery = totalTests > 0
       ? Math.round(
-          testResults
-            .filter(r => r.status === 'completed' && r.max_score)
-            .reduce((sum, r) => sum + (r.score / (r.max_score || 100)) * 100, 0) / completedTests
-        )
+        testResults
+          .filter(r => r.status === 'completed' && r.max_score)
+          .reduce((sum, r) => sum + (r.score / (r.max_score || 100)) * 100, 0) / completedTests
+      )
       : 0;
 
     // Revision Consistency: Based on recent activity (last 7 days)
