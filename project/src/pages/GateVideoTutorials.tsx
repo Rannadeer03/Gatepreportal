@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Play,
   Search,
   Filter,
   ArrowLeft,
   Eye,
   Calendar,
-  Clock,
   Youtube,
   BookOpen,
   Code,
@@ -15,10 +13,7 @@ import {
   Database,
   Network,
   Cpu,
-  Target,
-  Award,
-  GraduationCap
-} from 'lucide-react';
+  Target} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/button';
