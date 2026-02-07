@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, Mail, Hash, Building } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { supabase } from '../lib/supabase';
 
 export const Register: React.FC = () => {
+  const navigate = useNavigate();
   const { registerUser, isLoading, error } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [regNumberError, setRegNumberError] = useState<string | null>(null);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingRegNumber, setIsCheckingRegNumber] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,6 +25,82 @@ export const Register: React.FC = () => {
     department: '',
     verification_code: ''
   });
+
+  // Check if email already exists
+  useEffect(() => {
+    const checkEmail = async () => {
+      if (!formData.email || formData.email.length < 3) {
+        setEmailError(null);
+        return;
+      }
+
+      setIsCheckingEmail(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('email', formData.email)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking email:', error);
+          setIsCheckingEmail(false);
+          return;
+        }
+
+        if (data) {
+          setEmailError('This email is already registered. Please use a different email or try logging in.');
+        } else {
+          setEmailError(null);
+        }
+      } catch (err) {
+        console.error('Error checking email:', err);
+      } finally {
+        setIsCheckingEmail(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(checkEmail, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [formData.email]);
+
+  // Check if registration number already exists
+  useEffect(() => {
+    const checkRegNumber = async () => {
+      if (!formData.registration_number || formData.registration_number.length < 3) {
+        setRegNumberError(null);
+        return;
+      }
+
+      setIsCheckingRegNumber(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('registration_number')
+          .eq('registration_number', formData.registration_number)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking registration number:', error);
+          setIsCheckingRegNumber(false);
+          return;
+        }
+
+        if (data) {
+          setRegNumberError('This registration number is already in use. Please check your registration number.');
+        } else {
+          setRegNumberError(null);
+        }
+      } catch (err) {
+        console.error('Error checking registration number:', err);
+      } finally {
+        setIsCheckingRegNumber(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(checkRegNumber, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [formData.registration_number]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -35,6 +117,17 @@ export const Register: React.FC = () => {
     // Validate form data
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setLocalError('Please fill in all required fields');
+      return;
+    }
+
+    // Check for email or registration number errors
+    if (emailError) {
+      setLocalError('Please fix the email error before submitting');
+      return;
+    }
+
+    if (regNumberError) {
+      setLocalError('Please fix the registration number error before submitting');
       return;
     }
 
@@ -81,6 +174,11 @@ export const Register: React.FC = () => {
           department: '',
           verification_code: ''
         });
+
+        // Redirect to student dashboard after a short delay to show success message
+        setTimeout(() => {
+          navigate('/student-main-dashboard');
+        }, 1500);
       } else {
         setLocalError(result.message);
       }
@@ -121,32 +219,12 @@ export const Register: React.FC = () => {
                   <div className="text-sm text-green-700 whitespace-pre-line">
                     {successMessage}
                   </div>
-                  <div className="mt-3 text-xs text-green-600">
-                    You can close this page. Do not attempt to sign in until you receive approval notification.
-                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Student Registration Notice */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <User className="h-5 w-5 text-blue-400" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">
-                  Student Registration
-                </h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p>Only students can register through this form. Teachers are added by administrators.</p>
-                  <p className="mt-1"><strong>Important:</strong> Your account will require admin approval before you can sign in.</p>
-                  <p className="mt-1">Approval typically takes 24-48 hours. You'll receive an email when approved.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -185,10 +263,20 @@ export const Register: React.FC = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className={`appearance-none block w-full pl-10 pr-3 py-2 border ${emailError ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md shadow-sm placeholder-gray-400 focus:outline-none ${emailError ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-indigo-500 focus:border-indigo-500'
+                    } sm:text-sm`}
                   placeholder="Enter your email"
                 />
+                {isCheckingEmail && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <div className="animate-spin h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+                  </div>
+                )}
               </div>
+              {emailError && (
+                <p className="mt-1 text-sm text-red-600">{emailError}</p>
+              )}
             </div>
 
             <div>
@@ -206,10 +294,20 @@ export const Register: React.FC = () => {
                   value={formData.registration_number}
                   onChange={handleInputChange}
                   required
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className={`appearance-none block w-full pl-10 pr-3 py-2 border ${regNumberError ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md shadow-sm placeholder-gray-400 focus:outline-none ${regNumberError ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-indigo-500 focus:border-indigo-500'
+                    } sm:text-sm`}
                   placeholder="Enter your registration number"
                 />
+                {isCheckingRegNumber && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <div className="animate-spin h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+                  </div>
+                )}
               </div>
+              {regNumberError && (
+                <p className="mt-1 text-sm text-red-600">{regNumberError}</p>
+              )}
             </div>
 
             <div>

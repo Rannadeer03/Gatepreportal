@@ -58,7 +58,7 @@ export const Login: React.FC = () => {
 
     try {
       const result = await signInWithEmail(formData.email, formData.password);
-      
+
       if (!result.success) {
         setError(result.error || 'Failed to sign in');
       }
@@ -83,7 +83,7 @@ export const Login: React.FC = () => {
       // Here you would typically call your auth service's forgot password method
       // For now, we'll simulate the process
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-      
+
       setForgotPasswordMessage('Password reset link has been sent to your email address. Please check your inbox and follow the instructions.');
       setForgotPasswordEmail('');
     } catch (error: unknown) {
@@ -100,7 +100,7 @@ export const Login: React.FC = () => {
           Sign in to your account
         </h2>
         <p className="mt-2 text-center text-fluid-sm sm:text-fluid-base text-gray-600">
-          New student accounts require admin approval before first sign in
+          Students can register and login immediately
         </p>
       </div>
 
@@ -245,17 +245,16 @@ export const Login: React.FC = () => {
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              
+
               <p className="text-sm text-gray-600 mb-4">
                 Enter your email address and we'll send you a link to reset your password.
               </p>
 
               {forgotPasswordMessage && (
-                <div className={`mb-4 p-3 rounded-md ${
-                  forgotPasswordMessage.includes('sent') 
-                    ? 'bg-green-50 border border-green-200 text-green-700' 
+                <div className={`mb-4 p-3 rounded-md ${forgotPasswordMessage.includes('sent')
+                    ? 'bg-green-50 border border-green-200 text-green-700'
                     : 'bg-red-50 border border-red-200 text-red-700'
-                }`}>
+                  }`}>
                   <div className="flex">
                     <div className="flex-shrink-0">
                       {forgotPasswordMessage.includes('sent') ? (

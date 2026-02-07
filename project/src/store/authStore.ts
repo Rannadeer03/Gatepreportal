@@ -71,7 +71,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       set({
         user: null,
         profile: null,
@@ -91,12 +91,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const state = get();
       const now = Date.now();
       const attempts = state.loginAttempts[email] || { count: 0, lastAttempt: 0 };
-      
+
       // Reset attempts if more than 15 minutes have passed
       if (now - attempts.lastAttempt > 15 * 60 * 1000) {
         attempts.count = 0;
       }
-      
+
       // Check if too many attempts
       if (attempts.count >= 5) {
         const timeLeft = Math.ceil((15 * 60 * 1000 - (now - attempts.lastAttempt)) / 1000 / 60);
@@ -156,12 +156,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             if (createError.message && createError.message.includes('infinite recursion')) {
               throw new Error('System configuration error. Please contact support.');
             }
-            
+
             // Check if it's a permission error
             if (createError.code === '42501') {
               throw new Error('Permission denied. Please contact support.');
             }
-            
+
             throw new Error('Failed to create user profile. Please try registering again.');
           }
 
@@ -169,43 +169,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } catch (error) {
           // If profile creation fails, try to sign out and provide clear error
           await supabase.auth.signOut();
-          
+
           if (error instanceof Error && error.message.includes('System configuration error')) {
             throw error; // Re-throw system errors
           }
-          
+
           throw new Error('Failed to create user profile. Please try registering again.');
         }
       }
 
-      // Check approval status for non-super-admin users
-      if (profile.role !== 'super_admin' && profile.approval_status === 'pending') {
-        // Log the login attempt but deny access
-        await loggingService.logActivity('login_denied_pending_approval', {
-          user_id: authData.user.id,
-          email: profile.email,
-          role: profile.role
-        }, authData.user.id);
+      // Check approval status for teachers and admins (students are auto-approved)
+      if (profile.role === 'teacher' || profile.role === 'admin') {
+        if (profile.approval_status === 'pending') {
+          // Log the login attempt but deny access
+          await loggingService.logActivity('login_denied_pending_approval', {
+            user_id: authData.user.id,
+            email: profile.email,
+            role: profile.role
+          }, authData.user.id);
 
-        // Sign out the user
-        await supabase.auth.signOut();
-        
-        throw new Error('⏳ Account Pending Approval\n\nYour account is still pending approval by an administrator. Please wait for approval before attempting to sign in.\n\nApproval typically takes 24-48 hours. You will receive an email notification once your account is approved.\n\nIf you have been waiting longer than expected, please contact support.');
-      }
+          // Sign out the user
+          await supabase.auth.signOut();
 
-      if (profile.approval_status === 'rejected') {
-        // Log the login attempt but deny access
-        await loggingService.logActivity('login_denied_rejected', {
-          user_id: authData.user.id,
-          email: profile.email,
-          role: profile.role,
-          rejection_reason: profile.rejection_reason
-        }, authData.user.id);
+          throw new Error('⏳ Account Pending Approval\n\nYour teacher/admin account is pending approval by a super administrator. Please wait for approval before attempting to sign in.\n\nYou will receive an email notification once your account is approved.');
+        }
 
-        // Sign out the user
-        await supabase.auth.signOut();
-        
-        throw new Error('Access Denied: Your account has been rejected. Please contact support for assistance.');
+        if (profile.approval_status === 'rejected') {
+          // Log the login attempt but deny access
+          await loggingService.logActivity('login_denied_rejected', {
+            user_id: authData.user.id,
+            email: profile.email,
+            role: profile.role,
+            rejection_reason: profile.rejection_reason
+          }, authData.user.id);
+
+          // Sign out the user
+          await supabase.auth.signOut();
+
+          throw new Error('Access Denied: Your account has been rejected. Please contact support for assistance.');
+        }
       }
 
       // Log successful login
@@ -269,20 +271,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (authError) {
         console.error('Auth registration error:', authError);
-        
+
         // Handle specific error cases
         if (authError.message?.includes('User already registered') || authError.message?.includes('already been registered')) {
           throw new Error('An account with this email already exists. Please try signing in instead, or use a different email address.');
         }
-        
+
         if (authError.message?.includes('rate limit') || authError.message?.includes('Too Many Requests')) {
           throw new Error('Registration is temporarily limited due to high server load. Please try again in a few minutes.');
         }
-        
+
         if (authError.message?.includes('password')) {
           throw new Error('Password does not meet requirements. Please use a stronger password.');
         }
-        
+
         throw new Error('Failed to create account. Please try again.');
       }
 
@@ -299,13 +301,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         registration_number: userData.registration_number,
         department: userData.department,
         auth_provider: 'email',
-        approval_status: 'pending', // Requires admin approval
+        approval_status: 'approved', // Students are auto-approved
+        approved_at: new Date().toISOString(),
         created_at: new Date().toISOString()
       };
 
-      const { error: profileError } = await supabase
+      const { data: newProfile, error: profileError } = await supabase
         .from('profiles')
-        .insert([profileData]);
+        .insert([profileData])
+        .select()
+        .single();
 
       if (profileError) {
         console.error('Profile registration error:', profileError);
@@ -317,19 +322,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error('Failed to create user profile. Please try again.');
       }
 
-      console.log('Registration successful - pending approval');
+      console.log('Registration successful - student auto-approved');
 
-      // Sign out the user since they need approval
-      await supabase.auth.signOut();
-
-      // Clear auth state
+      // Keep user logged in - set auth state
       set({
-        user: null,
-        profile: null,
+        user: authData.user,
+        profile: newProfile,
         error: null
       });
 
-      const successMessage = '🎉 Registration Successful!\n\n⏳ Please wait 24 hours for your account to be activated.\n\n📧 You will receive an email notification once your account is ready.\n\n🚫 Do not attempt to sign in until you receive confirmation.';
+      const successMessage = '🎉 Registration Successful!\n\n✅ Your account is ready to use!\n\n🚀 Redirecting to your dashboard...';
 
       return {
         success: true,
@@ -339,7 +341,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: unknown) {
       console.error('Registration error:', error);
       let errorMessage = error instanceof Error ? error.message : 'Error registering user';
-      
+
       set({ error: errorMessage });
       return {
         success: false,
@@ -353,7 +355,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     try {
       set({ isLoading: true, error: null });
-      
+
       // Check current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {

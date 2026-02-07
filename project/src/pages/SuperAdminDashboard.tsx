@@ -29,7 +29,7 @@ export const SuperAdminDashboard: React.FC = () => {
   const [allUsers, setAllUsers] = useState<PendingUser[]>([]);
   const [stats, setStats] = useState<SuperAdminStats | null>(null);
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showTeacherForm, setShowTeacherForm] = useState(false);
@@ -122,7 +122,7 @@ export const SuperAdminDashboard: React.FC = () => {
     color: string;
     onClick?: () => void;
   }) => (
-    <div 
+    <div
       className={`bg-white p-6 rounded-lg shadow-md ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
       onClick={onClick}
     >
@@ -138,74 +138,82 @@ export const SuperAdminDashboard: React.FC = () => {
     </div>
   );
 
-  const PendingApprovalsTab = () => (
-    <div className="bg-white rounded-lg shadow-md">
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900">Pending User Approvals</h2>
-        <p className="text-gray-600">Review and approve or reject user registrations</p>
-      </div>
-      <div className="p-6">
-        {pendingUsers.length === 0 ? (
-          <div className="text-center py-8">
-            <UserCheck className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No pending approvals</h3>
-            <p className="mt-2 text-gray-500">All user registrations have been processed.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {pendingUsers.map((user) => (
-              <div key={user.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <Users className="w-5 h-5 text-gray-600" />
+  const PendingApprovalsTab = () => {
+    // Filter to only show teachers and admins (students are auto-approved)
+    const pendingTeachersAndAdmins = pendingUsers.filter(
+      user => user.role === 'teacher' || user.role === 'admin'
+    );
+
+    return (
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Pending Teacher/Admin Approvals</h2>
+          <p className="text-gray-600">Review and approve or reject teacher and admin registrations</p>
+          <p className="text-sm text-blue-600 mt-1">Note: Students are automatically approved and do not require review</p>
+        </div>
+        <div className="p-6">
+          {pendingTeachersAndAdmins.length === 0 ? (
+            <div className="text-center py-8">
+              <UserCheck className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No pending approvals</h3>
+              <p className="mt-2 text-gray-500">All teacher and admin registrations have been processed.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingTeachersAndAdmins.map((user) => (
+                <div key={user.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <Users className="w-5 h-5 text-gray-600" />
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                        <div className="flex items-center space-x-4 mt-1">
-                          <span className="text-xs text-gray-500">Role: {user.role}</span>
-                          <span className="text-xs text-gray-500">Department: {user.department}</span>
-                          {user.registration_number && (
-                            <span className="text-xs text-gray-500">Reg: {user.registration_number}</span>
-                          )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <div className="flex items-center space-x-4 mt-1">
+                            <span className="text-xs text-gray-500">Role: {user.role}</span>
+                            <span className="text-xs text-gray-500">Department: {user.department}</span>
+                            {user.faculty_id && (
+                              <span className="text-xs text-gray-500">Faculty ID: {user.faculty_id}</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400">
+                            Registered: {new Date(user.created_at).toLocaleDateString()}
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-400">
-                          Registered: {new Date(user.created_at).toLocaleDateString()}
-                        </p>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleApproveUser(user.id, true)}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => {
-                        const reason = prompt('Reason for rejection (optional):');
-                        handleApproveUser(user.id, false, reason || undefined);
-                      }}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                    >
-                      <XCircle className="w-4 h-4 mr-1" />
-                      Reject
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleApproveUser(user.id, true)}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => {
+                          const reason = prompt('Reason for rejection (optional):');
+                          handleApproveUser(user.id, false, reason || undefined);
+                        }}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Reject
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const UsersManagementTab = () => (
     <div className="bg-white rounded-lg shadow-md">
@@ -236,25 +244,23 @@ export const SuperAdminDashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      user.role === 'teacher' 
-                        ? 'bg-purple-100 text-purple-800' 
+                    <span className={`px-2 py-1 text-xs rounded-full ${user.role === 'teacher'
+                        ? 'bg-purple-100 text-purple-800'
                         : user.role === 'super_admin'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
                       {user.role}
                     </span>
                   </td>
                   <td className="py-3 text-sm">{user.department}</td>
                   <td className="py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      user.approval_status === 'approved' 
-                        ? 'bg-green-100 text-green-800' 
+                    <span className={`px-2 py-1 text-xs rounded-full ${user.approval_status === 'approved'
+                        ? 'bg-green-100 text-green-800'
                         : user.approval_status === 'rejected'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
                       {user.approval_status}
                     </span>
                   </td>
@@ -397,11 +403,10 @@ export const SuperAdminDashboard: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeTab === tab.id
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeTab === tab.id
                     ? 'bg-indigo-100 text-indigo-700'
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 <tab.icon className="w-4 h-4 mr-2" />
                 {tab.label}
@@ -417,21 +422,21 @@ export const SuperAdminDashboard: React.FC = () => {
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="space-y-3">
-                  <button 
+                  <button
                     onClick={() => setActiveTab('pending')}
                     className="w-full flex items-center p-3 text-left rounded-lg hover:bg-gray-50 border"
                   >
                     <Clock className="h-5 w-5 text-gray-600 mr-3" />
                     <span>Review Pending Approvals ({stats?.pending_approvals || 0})</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveTab('teachers')}
                     className="w-full flex items-center p-3 text-left rounded-lg hover:bg-gray-50 border"
                   >
                     <Plus className="h-5 w-5 text-gray-600 mr-3" />
                     <span>Add New Teacher</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveTab('logs')}
                     className="w-full flex items-center p-3 text-left rounded-lg hover:bg-gray-50 border"
                   >
@@ -469,7 +474,7 @@ export const SuperAdminDashboard: React.FC = () => {
           {activeTab === 'pending' && <PendingApprovalsTab />}
           {activeTab === 'users' && <UsersManagementTab />}
           {activeTab === 'logs' && <ActivityLogsTab />}
-          
+
           {activeTab === 'teachers' && (
             <div className="space-y-6">
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -536,7 +541,7 @@ export const SuperAdminDashboard: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
-                  
+
                   {allUsers.filter(user => user.role === 'teacher').length === 0 && (
                     <div className="text-center py-8">
                       <Shield className="mx-auto h-12 w-12 text-gray-400" />
