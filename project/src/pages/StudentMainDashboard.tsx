@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  GraduationCap, 
-  Target, 
+import {
+  GraduationCap,
+  Target,
   Briefcase,
-  User,
-  Bell,
-  Settings
+  School
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -93,6 +91,16 @@ export const StudentMainDashboard: React.FC = () => {
                   <div className="flex flex-col items-start">
                     <span className="text-lg font-bold text-gray-900">GATE Preparation</span>
                     <span className="text-sm text-gray-600">Access all your GATE resources, tests, and materials</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => { setShowEducationModal(false); navigate('/student-classroom-dashboard'); }}
+                  className="flex flex-row items-center w-full px-6 py-4 bg-purple-50 rounded-xl shadow hover:bg-purple-100 transition-all duration-200 border border-purple-200"
+                >
+                  <School className="h-8 w-8 text-purple-500 mr-3" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-lg font-bold text-gray-900">Classroom</span>
+                    <span className="text-sm text-gray-600">Join classes, submit assignments, and collaborate</span>
                   </div>
                 </button>
               </div>
