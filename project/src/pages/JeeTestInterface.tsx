@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle2, BookOpen } from 'lucide-react';
+import { Clock, CheckCircle2, BookOpen, Shield } from 'lucide-react';
 import { testService, testResultService, Question, Test } from '../services/supabaseApi';
 import { useAuthStore } from '../store/authStore';
+import { useExamProctoring } from '../hooks/useExamProctoring';
+import ProctoringWarningModal from '../components/ProctoringWarningModal';
 
 const JeeTestInterface: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -16,6 +18,19 @@ const JeeTestInterface: React.FC = () => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [loading, setLoading] = useState(true);
   const [startTime, setStartTime] = useState<Date | null>(null);
+
+  // Exam Proctoring System
+  const proctoring = useExamProctoring({
+    testId: testId || '',
+    studentId: user?.id || '',
+    maxViolations: 3,
+    warningDuration: 5000,
+    enableFullscreen: true,
+    autoSubmitOnMaxViolations: true,
+    trackTimeAway: true,
+    preventCopyPaste: true,
+    preventRightClick: true,
+  });
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -72,12 +87,6 @@ const JeeTestInterface: React.FC = () => {
       .padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswerSelect = (questionId: string, answer: string) => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [questionId]: answer,
-    }));
-  };
 
   const handleSubmit = async () => {
     if (!test || !user || !startTime) return;
@@ -131,6 +140,13 @@ const JeeTestInterface: React.FC = () => {
       alert('Error submitting test. Please try again.');
     }
   };
+
+  // Auto-submit when max violations reached
+  useEffect(() => {
+    if (proctoring.shouldAutoSubmit) {
+      handleSubmit();
+    }
+  }, [proctoring.shouldAutoSubmit]);
 
   if (loading) {
     return (
@@ -200,7 +216,6 @@ const JeeTestInterface: React.FC = () => {
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -214,18 +229,34 @@ const JeeTestInterface: React.FC = () => {
               <span className="font-medium">{formatTime(timeRemaining)}</span>
             </div>
           </div>
+
+          {/* Proctoring Status */}
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <Shield className={`h-5 w-5 ${proctoring.violations === 0 ? 'text-green-500' :
+                  proctoring.violations >= 2 ? 'text-red-500' :
+                    'text-yellow-500'
+                }`} />
+              <span className="text-sm font-medium text-gray-700">
+                Proctoring Active
+              </span>
+            </div>
+            <div className="text-xs text-gray-600">
+              Violations: {proctoring.violations}/3
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 gap-2">
             {questions.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentQuestionIndex(index)}
-                className={`w-10 h-10 rounded-md flex items-center justify-center ${
-                  currentQuestionIndex === index
+                className={`w-10 h-10 rounded-md flex items-center justify-center ${currentQuestionIndex === index
                     ? 'bg-indigo-600 text-white'
                     : selectedAnswers[questions[index]?.id!]
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
               >
                 {index + 1}
               </button>
@@ -305,6 +336,17 @@ const JeeTestInterface: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Proctoring Warning Modal */}
+      <ProctoringWarningModal
+        isOpen={proctoring.showWarning}
+        violations={proctoring.violations}
+        maxViolations={3}
+        message={proctoring.warningMessage}
+        timeAwaySeconds={proctoring.timeAwaySeconds}
+        onDismiss={proctoring.dismissWarning}
+        shouldAutoSubmit={proctoring.shouldAutoSubmit}
+      />
     </div>
   );
 };

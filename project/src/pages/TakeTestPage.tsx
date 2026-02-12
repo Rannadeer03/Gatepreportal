@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
-import { Clock, Save, AlertTriangle } from 'lucide-react';
+import { Clock, Save, AlertTriangle, Shield } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
+import { useExamProctoring } from '../hooks/useExamProctoring';
+import ProctoringWarningModal from '../components/ProctoringWarningModal';
 
 interface Question {
   id: string;
@@ -36,6 +38,19 @@ const TakeTestPage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Exam Proctoring System
+  const proctoring = useExamProctoring({
+    testId: testId || '',
+    studentId: user?.id || '',
+    maxViolations: 3, // Students get 3 warnings
+    warningDuration: 5000, // 5 seconds
+    enableFullscreen: true, // Require fullscreen mode
+    autoSubmitOnMaxViolations: true, // Auto-submit after max violations
+    trackTimeAway: true, // Track time spent away from exam
+    preventCopyPaste: true, // Disable copy/paste
+    preventRightClick: true, // Disable right-click
+  });
 
   useEffect(() => {
     if (!user) {
@@ -267,6 +282,13 @@ const TakeTestPage: React.FC = () => {
     }
   };
 
+  // Auto-submit when max violations reached
+  useEffect(() => {
+    if (proctoring.shouldAutoSubmit && !isSubmitting) {
+      handleSubmit();
+    }
+  }, [proctoring.shouldAutoSubmit]);
+
   if (!test || !questions.length) {
     return (
       <div className="min-h-screen bg-gray-100 py-8">
@@ -294,6 +316,17 @@ const TakeTestPage: React.FC = () => {
                 <p className="text-gray-600">{test.subject}</p>
               </div>
               <div className="flex items-center space-x-4">
+                {/* Proctoring Status Indicator */}
+                <div className="flex items-center space-x-2">
+                  <Shield className={`h-5 w-5 ${proctoring.violations === 0 ? 'text-green-500' :
+                      proctoring.violations >= 2 ? 'text-red-500' :
+                        'text-yellow-500'
+                    }`} />
+                  <span className="text-sm text-gray-600">
+                    Violations: {proctoring.violations}/3
+                  </span>
+                </div>
+
                 <div className="flex items-center text-gray-600">
                   <Clock className="h-5 w-5 mr-2" />
                   <span>{timeLeft} minutes left</span>
@@ -301,11 +334,10 @@ const TakeTestPage: React.FC = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                    isSubmitting
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${isSubmitting
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700'
-                  }`}
+                    }`}
                 >
                   {isSubmitting ? (
                     <>
@@ -319,6 +351,19 @@ const TakeTestPage: React.FC = () => {
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+
+            {/* Proctoring Info Banner */}
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start">
+                <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="ml-3 text-sm text-blue-800">
+                  <p className="font-medium">Proctoring Enabled</p>
+                  <p className="mt-1 text-blue-700">
+                    This exam is being monitored. Do not switch tabs, exit fullscreen, or use copy/paste. You have 3 chances before auto-submission.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -395,6 +440,17 @@ const TakeTestPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Proctoring Warning Modal */}
+      <ProctoringWarningModal
+        isOpen={proctoring.showWarning}
+        violations={proctoring.violations}
+        maxViolations={3}
+        message={proctoring.warningMessage}
+        timeAwaySeconds={proctoring.timeAwaySeconds}
+        onDismiss={proctoring.dismissWarning}
+        shouldAutoSubmit={proctoring.shouldAutoSubmit}
+      />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { loggingService } from '../services/loggingService';
 
 interface Profile {
+  full_name: string;
   id: string;
   name: string;
   email: string;
