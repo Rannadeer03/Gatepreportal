@@ -1,23 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  GraduationCap, 
-  Target, 
+import {
+  GraduationCap,
+  Target,
   Briefcase,
   Users,
-  BookOpen,
   FileText,
   ClipboardList,
   BarChart2,
-  Settings,
-  Award,
   Book,
-  PenTool,
-  Calendar,
-  TrendingUp,
   Plus,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  School
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -31,7 +26,7 @@ export const TeacherMainDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Dashboard Heading */}
         <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-4">Teacher Dashboard</h1>
-        
+
         {/* Welcome Section */}
         <div className="text-center mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -43,10 +38,10 @@ export const TeacherMainDashboard: React.FC = () => {
         </div>
 
         {/* Main Sections */}
-        <div className="flex flex-col md:flex-row justify-center items-center gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {/* Academic Management Section Button */}
-          <div className="flex justify-center items-center py-4">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full max-w-sm">
+          <div className="flex justify-center items-center">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full">
               <button
                 onClick={() => navigate('/academic/teacher-dashboard')}
                 className="flex flex-col items-center w-full px-6 py-6 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-blue-500 focus:outline-none"
@@ -59,8 +54,8 @@ export const TeacherMainDashboard: React.FC = () => {
           </div>
 
           {/* GATE Preparation Management Section Button */}
-          <div className="flex justify-center items-center py-4">
-            <div className="bg-gradient-to-br from-red-500 to-pink-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full max-w-sm">
+          <div className="flex justify-center items-center">
+            <div className="bg-gradient-to-br from-red-500 to-pink-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full">
               <button
                 onClick={() => navigate('/teacher-dashboard')}
                 className="flex flex-col items-center w-full px-6 py-6 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-red-500 focus:outline-none"
@@ -73,8 +68,8 @@ export const TeacherMainDashboard: React.FC = () => {
           </div>
 
           {/* Placement Preparation Management Section Button */}
-          <div className="flex justify-center items-center py-4">
-            <div className="bg-gradient-to-br from-green-500 to-emerald-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full max-w-sm">
+          <div className="flex justify-center items-center">
+            <div className="bg-gradient-to-br from-green-500 to-emerald-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full">
               <button
                 onClick={() => navigate('/teacher-placement-dashboard')}
                 className="flex flex-col items-center w-full px-6 py-6 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-green-500 focus:outline-none"
@@ -82,6 +77,20 @@ export const TeacherMainDashboard: React.FC = () => {
                 <Briefcase className="h-10 w-10 text-green-500 mb-3" />
                 <span className="text-xl font-bold text-gray-900 mb-1">Placement Preparation</span>
                 <span className="text-base text-gray-600 text-center">Manage placement resources, interviews, and career materials</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Classroom Management Section Button */}
+          <div className="flex justify-center items-center">
+            <div className="bg-gradient-to-br from-purple-500 to-violet-500 shadow-xl rounded-2xl p-6 flex flex-col items-center w-full">
+              <button
+                onClick={() => navigate('/teacher-classroom-dashboard')}
+                className="flex flex-col items-center w-full px-6 py-6 bg-white bg-opacity-90 rounded-xl shadow-lg hover:bg-opacity-100 transition-all duration-200 border-2 border-transparent hover:border-purple-500 focus:outline-none"
+              >
+                <School className="h-10 w-10 text-purple-500 mb-3" />
+                <span className="text-xl font-bold text-gray-900 mb-1">Classroom Management</span>
+                <span className="text-base text-gray-600 text-center">Create classes, manage students, and assignments</span>
               </button>
             </div>
           </div>
@@ -102,7 +111,7 @@ export const TeacherMainDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
               <div className="flex items-center">
                 <div className="bg-green-100 p-3 rounded-lg">
@@ -114,7 +123,7 @@ export const TeacherMainDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
               <div className="flex items-center">
                 <div className="bg-purple-100 p-3 rounded-lg">
@@ -126,7 +135,7 @@ export const TeacherMainDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
               <div className="flex items-center">
                 <div className="bg-orange-100 p-3 rounded-lg">
@@ -157,7 +166,7 @@ export const TeacherMainDashboard: React.FC = () => {
                 <p className="text-sm text-gray-600">Set up a new assessment</p>
               </div>
             </button>
-            
+
             <button
               onClick={() => navigate('/teacher/assignments')}
               className="flex items-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-green-500"
@@ -170,7 +179,7 @@ export const TeacherMainDashboard: React.FC = () => {
                 <p className="text-sm text-gray-600">Add new assignment</p>
               </div>
             </button>
-            
+
             <button
               onClick={() => navigate('/teacher/course-materials')}
               className="flex items-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-purple-500"
@@ -202,7 +211,7 @@ export const TeacherMainDashboard: React.FC = () => {
                 <p className="text-sm text-gray-600">Find answers to common questions</p>
               </div>
             </button>
-            
+
             <button
               onClick={() => navigate('/support')}
               className="flex items-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-green-500"

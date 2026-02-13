@@ -68,6 +68,10 @@ import GateSchedule from './pages/GateSchedule';
 import PerformanceDashboard from './pages/PerformanceDashboard';
 import ResumeBuilder from './pages/ResumeBuilder';
 import PlacementVideoTutorials from './pages/PlacementVideoTutorials';
+import TeacherClassroomDashboard from './pages/TeacherClassroomDashboard';
+import StudentClassroomDashboard from './pages/StudentClassroomDashboard';
+import TeacherClassView from './pages/TeacherClassView';
+import StudentClassView from './pages/StudentClassView';
 
 
 // Simple loading screen component
@@ -185,6 +189,10 @@ const App: React.FC = () => {
             <Route path="/gate/schedule" element={<GateSchedule />} />
             <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
             <Route path="/resume-builder" element={<ResumeBuilder />} />
+            <Route path="/teacher-classroom-dashboard" element={<TeacherClassroomDashboard />} />
+            <Route path="/student-classroom-dashboard" element={<StudentClassroomDashboard />} />
+            <Route path="/teacher-classroom/:classId" element={<TeacherClassView />} />
+            <Route path="/student-classroom/:classId" element={<StudentClassView />} />
 
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
