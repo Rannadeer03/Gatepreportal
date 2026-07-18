@@ -49,7 +49,7 @@ const TestResultPage: React.FC = () => {
   const { user } = useAuthStore();
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -61,26 +61,47 @@ const TestResultPage: React.FC = () => {
   }, [user, testId]);
 
   const fetchTestResult = async () => {
-    if (!user) return;
-    
+    if (!user || !testId) return;
+
     try {
-      // Fetch test result
-      const { data: resultData, error: resultError } = await supabase
-        .from('test_results')
+      // A test result can live in either the mock-test schema (test_results /
+      // test_questions / questions) or the academic-portal schema
+      // (academic_test_results / academic_test_questions / academic_questions).
+      // Try the mock-test tables first, fall back to the academic ones.
+      let resultsTable = 'test_results';
+      let testQuestionsTable = 'test_questions';
+      let questionsRelation = 'questions';
+
+      let { data: resultData, error: resultError } = await supabase
+        .from(resultsTable)
         .select('*')
         .eq('test_id', testId)
         .eq('student_id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (!resultData && !resultError) {
+        resultsTable = 'academic_test_results';
+        testQuestionsTable = 'academic_test_questions';
+        questionsRelation = 'academic_questions';
+
+        ({ data: resultData, error: resultError } = await supabase
+          .from(resultsTable)
+          .select('*')
+          .eq('test_id', testId)
+          .eq('student_id', user.id)
+          .maybeSingle());
+      }
 
       if (resultError) throw resultError;
+      if (!resultData) throw new Error('No result found for this test.');
       setTestResult(resultData);
 
-      // Fetch questions
+      // Fetch questions from whichever schema the result came from
       const { data: questionsData, error: questionsError } = await supabase
-        .from('test_questions')
+        .from(testQuestionsTable)
         .select(`
           question_id,
-          questions (
+          ${questionsRelation} (
             id,
             question_text,
             type,
@@ -94,21 +115,48 @@ const TestResultPage: React.FC = () => {
         .order('question_order');
 
       if (questionsError) throw questionsError;
-      const typedQuestions = (questionsData as unknown as TestQuestion[]).map(q => ({
-        id: q.questions.id,
-        question_text: q.questions.question_text,
-        type: q.questions.type as 'text' | 'image',
-        options: q.questions.options as string[],
-        correct_option: q.questions.correct_option,
-        image_url: q.questions.image_url,
-        explanation: q.questions.explanation
-      }));
+      const typedQuestions = (questionsData as unknown as TestQuestion[]).map(q => {
+        const question = (q as any)[questionsRelation] ?? q.questions;
+        return {
+          id: question.id,
+          question_text: question.question_text,
+          type: question.type as 'text' | 'image',
+          options: question.options as string[],
+          correct_option: question.correct_option,
+          image_url: question.image_url,
+          explanation: question.explanation
+        };
+      });
       setQuestions(typedQuestions);
     } catch (error: any) {
       console.error('Error fetching test result:', error);
       setError(error.message);
     }
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-start p-4 bg-red-50 border border-red-200 rounded-md">
+              <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Couldn't load your results</h3>
+                <div className="mt-2 text-sm text-red-700">{error}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/')}
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              Back to home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!testResult || !questions.length) {
     return (

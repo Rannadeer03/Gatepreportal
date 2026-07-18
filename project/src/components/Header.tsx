@@ -506,14 +506,14 @@ export const Header: React.FC = () => {
               ) : (
                 <>
                   <Link
-                    to="/about"
+                    to="/faq"
                     className="block px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 touch-target transition-all duration-200"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     About
                   </Link>
                   <Link
-                    to="/contact"
+                    to="/support"
                     className="block px-4 py-4 rounded-lg text-fluid-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 touch-target transition-all duration-200"
                     onClick={() => setIsMenuOpen(false)}
                   >

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface Test {
   id: string;
@@ -26,6 +26,7 @@ const TestResults: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { testId } = useParams<{ testId?: string }>();
 
   useEffect(() => {
     const fetchTests = async () => {
@@ -38,6 +39,12 @@ const TestResults: React.FC = () => {
           .order('created_at', { ascending: false });
         if (error) throw error;
         setTests(data || []);
+
+        // Deep-linked from a specific test row (e.g. /teacher/test-results/:testId)
+        if (testId) {
+          const match = (data || []).find((t) => t.id === testId);
+          if (match) fetchResults(match);
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch tests');
       } finally {
@@ -45,7 +52,8 @@ const TestResults: React.FC = () => {
       }
     };
     fetchTests();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testId]);
 
   const fetchResults = async (test: Test) => {
     setLoading(true);

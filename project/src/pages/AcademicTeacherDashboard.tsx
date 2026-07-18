@@ -16,6 +16,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../store/authStore';
 
 interface TestData {
   id: string;
@@ -34,6 +35,7 @@ interface TeacherProfile {
 const AcademicTeacherDashboard: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [tests, setTests] = useState<TestData[]>([]);
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [totalStudents, setTotalStudents] = useState(0);
@@ -145,13 +147,12 @@ const AcademicTeacherDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchTeacherData();
-  }, []);
+  }, [user]);
 
   const fetchTeacherData = async () => {
     try {
       setLoading(true);
-      // Fetch teacher profile (assume user is in localStorage/session)
-      const userId = localStorage.getItem('user_id');
+      const userId = user?.id;
       if (!userId) return;
       const { data: profileData } = await supabase
         .from('profiles')

@@ -30,9 +30,11 @@ export const TeacherCreationForm: React.FC<TeacherCreationFormProps> = ({ onSucc
 
   const generatePassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    const randomValues = new Uint32Array(12);
+    crypto.getRandomValues(randomValues);
     let password = '';
     for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+      password += chars.charAt(randomValues[i] % chars.length);
     }
     setFormData({ ...formData, password });
   };
@@ -69,15 +71,11 @@ export const TeacherCreationForm: React.FC<TeacherCreationFormProps> = ({ onSucc
       } else {
         // Provide more helpful error messages
         let errorMessage = result.error || 'Failed to create teacher account';
-        
-        if (errorMessage.includes('Service role key not configured')) {
-          errorMessage = 'Service role key not configured. Please add VITE_SUPABASE_SERVICE_ROLE_KEY to your environment variables and restart the development server.';
-        } else if (errorMessage.includes('User not allowed')) {
-          errorMessage = 'Permission denied. Please check that you are logged in as a super admin and that the service role key is properly configured.';
-        } else if (errorMessage.includes('Unauthorized')) {
+
+        if (errorMessage.includes('User not allowed') || errorMessage.includes('Unauthorized')) {
           errorMessage = 'Unauthorized: Super admin access required. Please log in with a super admin account.';
         }
-        
+
         setError(errorMessage);
       }
     } catch (error) {
@@ -105,11 +103,6 @@ export const TeacherCreationForm: React.FC<TeacherCreationFormProps> = ({ onSucc
             </button>
           </div>
           
-          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md text-sm">
-            <strong>Note:</strong> This feature requires the Supabase service role key to be configured. 
-            If you encounter permission errors, please check the <code className="bg-blue-100 px-1 rounded">SERVICE_ROLE_SETUP.md</code> file for setup instructions.
-          </div>
-
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
               {error}

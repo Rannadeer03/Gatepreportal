@@ -1,6 +1,4 @@
 import { supabase } from '../lib/supabase';
-import { API_BASE_URL } from '../config';
-import { Question } from './supabaseApi';
 
 interface ProfileData {
   name: string;
@@ -40,12 +38,6 @@ export interface Assignment {
   };
 }
 
-export interface StudyMaterial {
-  folder: string;
-  subfolders: string[];
-  files: string[];
-}
-
 export interface CourseMaterial {
   id: string;
   subject_id: string;
@@ -60,36 +52,6 @@ export interface CourseMaterial {
   subject_code: string;
   upload_date: string;
   file_type: string;
-}
-
-export interface Test {
-  id: string;
-  title: string;
-  subject: string;
-  duration: number;
-  questions: Question[];
-  participants?: string[];
-  test_schedule?: {
-    is_scheduled: boolean;
-    scheduled_date: string;
-    scheduled_time: string;
-    time_limit: number;
-    allow_late_submissions: boolean;
-    access_window: {
-      start: string;
-      end: string;
-    };
-  };
-  difficulty_distribution?: {
-    easy: number;
-    medium: number;
-    hard: number;
-  };
-  target_ratio?: {
-    easy: number;
-    medium: number;
-    hard: number;
-  };
 }
 
 export const authService = {
@@ -145,8 +107,6 @@ export const authService = {
 
 // API Service
 export const api = {
-  baseUrl: API_BASE_URL,
-
   // Subjects
   async addSubject(subject: Omit<Subject, 'id' | 'teacher_id' | 'created_at' | 'updated_at'>) {
     const { data: { user } } = await supabase.auth.getUser();
@@ -252,27 +212,6 @@ export const api = {
     return data || [];
   },
 
-  async deleteSubject(subjectId: string) {
-    const { error } = await supabase
-      .from('subjects')
-      .delete()
-      .eq('id', subjectId);
-
-    if (error) throw error;
-    return { success: true };
-  },
-
-  async deleteAllSubjects() {
-    try {
-      const subjects = await this.getSubjects();
-      const deletePromises = subjects.map((subject: Subject) => this.deleteSubject(subject.id));
-      await Promise.all(deletePromises);
-    } catch (error) {
-      console.error('Error deleting subjects:', error);
-      throw new Error('Failed to delete all subjects');
-    }
-  },
-
   // Utility function to ensure subjects exist
   async ensureSubjectsExist() {
     try {
@@ -317,46 +256,6 @@ export const api = {
       console.error('Error ensuring subjects exist:', error);
       throw error;
     }
-  },
-
-  // Questions
-  async addQuestion(question: Question) {
-    const response = await fetch(`${API_BASE_URL}/teacher/questions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(question),
-    });
-    return response.json();
-  },
-
-  async updateQuestion(questionId: string, updates: Partial<Question>) {
-    const response = await fetch(`${API_BASE_URL}/teacher/questions/${questionId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-    return response.json();
-  },
-
-  async deleteQuestion(questionId: string) {
-    const response = await fetch(`${API_BASE_URL}/teacher/questions/${questionId}`, {
-      method: 'DELETE',
-    });
-    return response.json();
-  },
-
-  async getQuestions() {
-    const response = await fetch(`${API_BASE_URL}/student/questions`);
-    return response.json();
-  },
-
-  async getQuestionsBySubject(subjectId: string) {
-    const response = await fetch(`${API_BASE_URL}/student/questions/${subjectId}`);
-    return response.json();
   },
 
   // Assignments
@@ -428,43 +327,6 @@ export const api = {
     }
   },
 
-  async getAssignments(mode: 'academic' | 'gate' = 'gate') {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    
-    // Get subjects assigned to this teacher OR subjects without teacher_id (available to all teachers)
-    const { data: teacherSubjects, error: teacherSubjectsError } = await supabase
-      .from('subjects')
-      .select('id')
-      .or(`teacher_id.eq.${user.id},teacher_id.is.null`);
-    
-    if (teacherSubjectsError) {
-      console.error('Error fetching teacher subjects:', teacherSubjectsError);
-      throw teacherSubjectsError;
-    }
-    
-    const subjectIds = teacherSubjects.map((s: { id: string }) => s.id);
-    if (subjectIds.length === 0) return [];
-    
-    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
-    const { data: assignments, error: assignmentsError } = await supabase
-      .from(table)
-      .select(`*, subject:subjects(name, code)`)
-      .in('subject_id', subjectIds);
-    if (assignmentsError) throw assignmentsError;
-    return assignments;
-  },
-
-  async getAssignmentsBySubject(subjectId: string, mode: 'academic' | 'gate' = 'gate') {
-    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
-    const { data, error } = await supabase
-      .from(table)
-      .select(`*, subject:subjects(name, code)`)
-      .eq('subject_id', subjectId);
-    if (error) throw error;
-    return data;
-  },
-
   async deleteAssignment(assignmentId: string, mode: 'academic' | 'gate' = 'gate') {
     const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
     const bucket = mode === 'academic' ? 'academic_assignments' : 'assignments';
@@ -489,62 +351,6 @@ export const api = {
       .eq('id', assignmentId);
     if (error) throw error;
     return { success: true };
-  },
-
-  // Student Assignment Views
-  async getStudentAssignments(mode: 'academic' | 'gate' = 'gate') {
-    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
-    const { data, error } = await supabase
-      .from(table)
-      .select(`*, subject:subjects(name, code)`);
-    if (error) throw error;
-    return data;
-  },
-
-  async getStudentAssignmentsBySubject(subjectId: string, mode: 'academic' | 'gate' = 'gate') {
-    const table = mode === 'academic' ? 'academic_assignments' : 'assignments';
-    const { data, error } = await supabase
-      .from(table)
-      .select(`*, subject:subjects(name, code)`)
-      .eq('subject_id', subjectId);
-    if (error) throw error;
-    return data;
-  },
-
-  // Study Materials
-  async createStudyMaterialFolder(folderName: string) {
-    const response = await fetch(`${API_BASE_URL}/teacher/study-material/folders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ folder_name: folderName }),
-    });
-    return response.json();
-  },
-
-  async uploadStudyMaterial(subject: string, file: File) {
-    const formData = new FormData();
-    formData.append('subject', subject);
-    formData.append('file', file);
-
-    const response = await fetch(`${API_BASE_URL}/teacher/study-material/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-    return response.json();
-  },
-
-  async deleteStudyMaterialFolder(folderName: string) {
-    const response = await fetch(`${API_BASE_URL}/teacher/study-material/folders/${folderName}`, {
-      method: 'DELETE',
-    });
-    return response.json();
-  },
-
-  async getStudyMaterials() {
-    const response = await fetch(`${API_BASE_URL}/student/study-material`);
-    return response.json();
   },
 
   async uploadCourseMaterial(
@@ -629,21 +435,15 @@ export const api = {
     return data;
   },
 
-  async downloadCourseMaterial(materialPath: string): Promise<Blob> {
-    const { data, error } = await supabase.storage
-      .from('course-materials')
-      .download(materialPath);
-
-    if (error) throw error;
-    return data;
-  },
-
-  async getStudentCourseMaterials(subject_id: string): Promise<CourseMaterial[]> {
+  // Batched version of getCourseMaterialsBySubject — fetches materials for
+  // every given subject in a single query instead of one query per subject.
+  async getCourseMaterialsBySubjects(subjectIds: string[], mode: 'academic' | 'gate' = 'gate'): Promise<CourseMaterial[]> {
+    if (subjectIds.length === 0) return [];
+    const table = mode === 'academic' ? 'academic_course_materials' : 'course_materials';
     const { data, error } = await supabase
-      .from('course_materials')
+      .from(table)
       .select('*')
-      .eq('subject_id', subject_id);
-
+      .in('subject_id', subjectIds);
     if (error) throw error;
     return data;
   },
@@ -671,34 +471,6 @@ export const api = {
       .delete()
       .eq('id', materialId);
     if (error) throw error;
-  },
-
-  async createTest(testData: Omit<Test, 'id'>): Promise<Test> {
-    const response = await fetch(`${API_BASE_URL}/teacher/tests`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(testData),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to create test');
-    }
-    return response.json();
-  },
-
-  async updateTest(testId: string, testData: Partial<Test>): Promise<Test> {
-    const response = await fetch(`${API_BASE_URL}/teacher/tests/${testId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(testData),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to update test');
-    }
-    return response.json();
   },
 
   // New function to get ALL assignments for teacher review

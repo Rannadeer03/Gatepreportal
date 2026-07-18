@@ -506,7 +506,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ mode = 'gate
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => navigate(`/test-results/${test.id}`)}
+                          onClick={() => navigate(`/teacher/test-results/${test.id}`)}
                           className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
                           title="View Results"
                         >

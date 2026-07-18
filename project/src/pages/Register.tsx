@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, Mail, Hash, Building } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
+import { validatePassword } from '../utils/validation';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -136,8 +137,9 @@ export const Register: React.FC = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setLocalError('Password must be at least 6 characters long');
+    const { isValid: isPasswordValid, errors: passwordErrors } = validatePassword(formData.password);
+    if (!isPasswordValid) {
+      setLocalError(passwordErrors.join(' '));
       return;
     }
 

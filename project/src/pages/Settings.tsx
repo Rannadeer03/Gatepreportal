@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import AvatarUpload from '../components/ui/avatar-upload';
 import jsPDF from 'jspdf';
+import { validatePassword, validateEmail } from '../utils/validation';
 
 const departmentOptions = [
   'Computer Science',
@@ -30,6 +31,7 @@ const Settings: React.FC = () => {
   const [notifications, setNotifications] = useState(profile?.notification_preferences || { email: true, inApp: true });
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -133,15 +135,52 @@ const Settings: React.FC = () => {
     }
   };
 
+  // Both sensitive changes below re-verify the current password before
+  // acting, so a stolen/leaked session token alone isn't enough to lock the
+  // real owner out of their account.
+  const reauthenticate = async (): Promise<boolean> => {
+    if (!user?.email) {
+      setError('Could not verify your account. Please log in again.');
+      return false;
+    }
+    if (!currentPassword) {
+      setError('Enter your current password to confirm this change.');
+      return false;
+    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (error) {
+      setError('Current password is incorrect.');
+      return false;
+    }
+    return true;
+  };
+
   const handlePasswordChange = async () => {
     setLoading(true);
     setError('');
     setSuccess('');
+
+    const { isValid, errors } = validatePassword(password);
+    if (!isValid) {
+      setError(errors.join(' '));
+      setLoading(false);
+      return;
+    }
+
+    if (!(await reauthenticate())) {
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (!error) {
       setSuccess('Password updated successfully!');
       setPassword('');
+      setCurrentPassword('');
     } else {
       setError('Failed to update password');
     }
@@ -151,10 +190,23 @@ const Settings: React.FC = () => {
     setLoading(true);
     setError('');
     setSuccess('');
+
+    if (!validateEmail(email)) {
+      setError('Enter a valid email address.');
+      setLoading(false);
+      return;
+    }
+
+    if (!(await reauthenticate())) {
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ email });
     setLoading(false);
     if (!error) {
       setSuccess('Email update requested! Check your new email for a confirmation link.');
+      setCurrentPassword('');
     } else {
       setError('Failed to update email');
     }
@@ -242,9 +294,15 @@ const Settings: React.FC = () => {
                 <input type="checkbox" checked={notifications.inApp} onChange={e => setNotifications((n: any) => ({ ...n, inApp: e.target.checked }))} /> In-App
               </label>
             </div>
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium text-gray-700">Current Password</label>
+              <p className="text-xs text-gray-500 mb-1">Required to confirm an email or password change below.</p>
+              <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md p-2" placeholder="Current password" autoComplete="current-password" />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Change Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md p-2" placeholder="New password" />
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md p-2" placeholder="New password" autoComplete="new-password" />
+              <p className="text-xs text-gray-500 mt-1">At least 8 characters, with uppercase, lowercase, a number, and a special character.</p>
               <Button onClick={handlePasswordChange} className="mt-2" size="sm">Update Password</Button>
             </div>
             <div className="flex justify-between items-center mt-6">

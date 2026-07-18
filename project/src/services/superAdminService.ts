@@ -1,5 +1,28 @@
-import { supabase, getSupabaseAdmin } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { loggingService } from './loggingService';
+
+// All privileged operations (creating auth users, banning/deleting users,
+// approving registrations) run inside the `admin-actions` Supabase Edge
+// Function, which holds the service-role key server-side only. The client
+// never has access to that key; supabase.functions.invoke() automatically
+// forwards the caller's current session JWT so the function can verify who
+// is actually asking.
+async function invokeAdminAction<T extends Record<string, unknown> = Record<string, unknown>>(
+  action: string,
+  payload: Record<string, unknown> = {}
+): Promise<{ success: boolean; error?: string } & Partial<T>> {
+  const { data, error } = await supabase.functions.invoke('admin-actions', {
+    body: { action, ...payload },
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  if (data?.error) {
+    return { success: false, error: data.error };
+  }
+  return { success: true, ...(data as Partial<T>) };
+}
 
 export interface PendingUser {
   id: string;
@@ -72,27 +95,17 @@ class SuperAdminService {
         return { success: false, error: 'Not authenticated' };
       }
 
-      // Check if current user is super admin
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile || profile.role !== 'super_admin') {
-        return { success: false, error: 'Unauthorized: Super admin access required' };
-      }
-
-      // Use the database function to approve/reject user
-      const { error } = await supabase.rpc('approve_user', {
-        p_user_id: approvalData.userId,
-        p_approved_by: user.id,
-        p_approval_status: approvalData.approved ? 'approved' : 'rejected',
-        p_rejection_reason: approvalData.rejectionReason || null
+      // The edge function re-derives the approver's identity from the
+      // caller's own verified session — it never trusts a client-supplied
+      // approver id, and it checks super_admin role itself server-side.
+      const result = await invokeAdminAction('approveUser', {
+        userId: approvalData.userId,
+        approved: approvalData.approved,
+        rejectionReason: approvalData.rejectionReason,
       });
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       // Log the approval/rejection
@@ -105,9 +118,9 @@ class SuperAdminService {
 
       return { success: true };
     } catch (error: unknown) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to process user approval' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to process user approval'
       };
     }
   }
@@ -118,106 +131,14 @@ class SuperAdminService {
    */
   async createTeacher(teacherData: CreateTeacherData): Promise<{ success: boolean; teacherId?: string; error?: string }> {
     try {
-      // Verify current user is super admin
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
       if (!currentUser) {
         return { success: false, error: 'Authentication required' };
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
+      const result = await invokeAdminAction<{ teacherId?: string }>('createTeacher', teacherData);
 
-      if (!profile || profile.role !== 'super_admin') {
-        return { success: false, error: 'Unauthorized: Super admin access required' };
-      }
-
-      // Get admin client
-      const supabaseAdmin = getSupabaseAdmin();
-      if (!supabaseAdmin) {
-        return { 
-          success: false, 
-          error: 'Service role key not configured. Please add VITE_SUPABASE_SERVICE_ROLE_KEY to your environment variables.' 
-        };
-      }
-
-      // Since we can't create the teacher_requests table easily, we'll create the teacher directly
-      // First, create the teacher account in Supabase Auth using admin client
-      try {
-        // Create the teacher user account directly using admin client
-        const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-          email: teacherData.email,
-          password: teacherData.password,
-          email_confirm: true, // Skip email confirmation
-          user_metadata: {
-            name: teacherData.name,
-            role: 'teacher'
-          }
-        });
-
-        if (createUserError) {
-          console.error('Failed to create teacher user:', createUserError);
-          throw createUserError;
-        }
-
-        if (!newUser.user) {
-          throw new Error('Failed to create teacher user account');
-        }
-
-        // Create the teacher profile using regular client (RLS policies should allow this)
-        const profileData = {
-          id: newUser.user.id,
-          name: teacherData.name,
-          email: teacherData.email,
-          role: 'teacher',
-          faculty_id: teacherData.faculty_id, // Ensure this is a string
-          department: teacherData.department,
-          bio: teacherData.bio,
-          phone_number: teacherData.phone_number,
-          auth_provider: 'email',
-          requires_password_change: true, // Teacher should change password on first login
-          approval_status: 'approved', // Teachers are pre-approved by super admin
-          approved_by: currentUser.id,
-          approved_at: new Date().toISOString()
-        };
-
-        // Debug: log the profile data to ensure faculty_id is a string
-        console.log('Creating profile with data:', profileData);
-        console.log('faculty_id type:', typeof profileData.faculty_id);
-        console.log('faculty_id value:', profileData.faculty_id);
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([profileData]);
-
-        if (profileError) {
-          console.error('Failed to create teacher profile:', profileError);
-          // Try to clean up the user account
-          await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-          throw profileError;
-        }
-
-        // Log teacher creation
-        await loggingService.logTeacherCreation(currentUser.id, newUser.user.id, {
-          name: teacherData.name,
-          email: teacherData.email,
-          faculty_id: teacherData.faculty_id,
-          department: teacherData.department
-        });
-
-        return {
-          success: true,
-          teacherId: newUser.user.id,
-          error: `Teacher account created successfully! ${teacherData.name} can now sign in with email ${teacherData.email} and the provided password. They will be prompted to change their password on first login.`
-        };
-
-      } catch (createError) {
-        console.error('Error creating teacher account:', createError);
-        
-        // Fallback: Log teacher creation request for manual processing
+      if (!result.success) {
         await loggingService.logActivity(
           'teacher_creation_requested',
           {
@@ -225,17 +146,26 @@ class SuperAdminService {
             teacher_name: teacherData.name,
             faculty_id: teacherData.faculty_id,
             department: teacherData.department,
-            error: createError.message,
+            error: result.error,
             instructions: 'Teacher creation failed, manual intervention required'
           },
           currentUser.id
         );
-
-        return {
-          success: false,
-          error: `Failed to create teacher account: ${createError.message}. Please try again or create the account manually.`
-        };
+        return { success: false, error: `Failed to create teacher account: ${result.error}` };
       }
+
+      await loggingService.logTeacherCreation(currentUser.id, result.teacherId!, {
+        name: teacherData.name,
+        email: teacherData.email,
+        faculty_id: teacherData.faculty_id,
+        department: teacherData.department
+      });
+
+      return {
+        success: true,
+        teacherId: result.teacherId,
+        error: `Teacher account created successfully! ${teacherData.name} can now sign in with email ${teacherData.email} and the provided password. They will be prompted to change their password on first login.`
+      };
     } catch (error: unknown) {
       return {
         success: false,
@@ -321,24 +251,9 @@ class SuperAdminService {
         return { success: false, error: 'Not authenticated' };
       }
 
-      // Check if current user is super admin
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile || profile.role !== 'super_admin') {
-        return { success: false, error: 'Unauthorized: Super admin access required' };
-      }
-
-      // Update user status in auth
-      const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
-        ban_duration: active ? 'none' : '876000h' // Ban for 100 years if inactive
-      });
-
-      if (authError) {
-        return { success: false, error: authError.message };
+      const result = await invokeAdminAction('updateUserStatus', { userId, active });
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       // Log the status change
@@ -350,9 +265,9 @@ class SuperAdminService {
 
       return { success: true };
     } catch (error: unknown) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update user status' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to update user status'
       };
     }
   }
@@ -367,22 +282,9 @@ class SuperAdminService {
         return { success: false, error: 'Not authenticated' };
       }
 
-      // Check if current user is super admin
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile || profile.role !== 'super_admin') {
-        return { success: false, error: 'Unauthorized: Super admin access required' };
-      }
-
-      // Delete user from auth (this will cascade to profile due to foreign key)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-      if (authError) {
-        return { success: false, error: authError.message };
+      const result = await invokeAdminAction('deleteUser', { userId });
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       // Log the deletion
@@ -394,9 +296,9 @@ class SuperAdminService {
 
       return { success: true };
     } catch (error: unknown) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to delete user' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete user'
       };
     }
   }
@@ -459,76 +361,29 @@ class SuperAdminService {
   async approveStudentRegistration(profileId: string): Promise<{ success: boolean; error?: string }> {
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
       if (!currentUser) {
         return { success: false, error: 'Authentication required' };
       }
 
-      // Verify super admin
-      const { data: profile } = await supabase
+      const { data: pendingProfile } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (!profile || profile.role !== 'super_admin') {
-        return { success: false, error: 'Unauthorized: Super admin access required' };
-      }
-
-      // Get pending registration
-      const { data: pendingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
+        .select('email, name')
         .eq('id', profileId)
         .eq('approval_status', 'pending')
-        .single();
+        .maybeSingle();
 
-      if (fetchError || !pendingProfile) {
-        return { success: false, error: 'Pending registration not found' };
+      const result = await invokeAdminAction('approveStudentRegistration', { profileId });
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      // Get admin client
-      const supabaseAdmin = getSupabaseAdmin();
-      if (!supabaseAdmin) {
-        return { 
-          success: false, 
-          error: 'Service role key not configured. Cannot approve registration.' 
-        };
-      }
-
-      // Confirm the auth user (since registration creates unconfirmed users)
-      const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(
-        profileId,
-        { email_confirm: true }
-      );
-
-      if (confirmError) {
-        return { success: false, error: 'Failed to confirm auth account: ' + confirmError.message };
-      }
-
-      // Update profile approval status
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          approval_status: 'approved',
-          approved_by: currentUser.id,
-          approved_at: new Date().toISOString()
-        })
-        .eq('id', profileId);
-
-      if (updateError) {
-        return { success: false, error: 'Failed to update profile: ' + updateError.message };
-      }
-
-      // Log approval
       await loggingService.logActivity('student_approved', {
         approved_student_id: profileId,
-        approved_student_email: pendingProfile.email,
-        approved_student_name: pendingProfile.name
+        approved_student_email: pendingProfile?.email,
+        approved_student_name: pendingProfile?.name
       }, currentUser.id);
 
       return { success: true };
-
     } catch (error: unknown) {
       return {
         success: false,

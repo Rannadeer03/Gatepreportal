@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle2, BookOpen, Shield } from 'lucide-react';
 import { testService, testResultService, Question, Test } from '../services/supabaseApi';
@@ -59,24 +59,32 @@ const JeeTestInterface: React.FC = () => {
     }
   }, [testId, navigate]);
 
+  // Set the exam start time exactly once, when the timed portion begins.
   useEffect(() => {
-    if (timeRemaining > 0 && !showInstructions && test) {
-      const timer = setInterval(() => {
-        setTimeRemaining((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(timer);
-            handleSubmit();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-
+    if (!showInstructions && test && !startTime) {
       setStartTime(new Date());
-
-      return () => clearInterval(timer);
     }
-  }, [timeRemaining, showInstructions, test]);
+  }, [showInstructions, test, startTime]);
+
+  // Create the countdown interval exactly once per test attempt (not every tick),
+  // so it doesn't keep resetting startTime or re-registering handlers.
+  useEffect(() => {
+    if (showInstructions || !test || timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(timer);
+          handleSubmitRef.current();
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showInstructions, test]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -126,25 +134,25 @@ const JeeTestInterface: React.FC = () => {
       });
 
       // Navigate to results page
-      navigate('/test-results', {
-        state: {
-          score: scoredMarks,
-          total: totalMarks,
-          percentage: Math.max(0, percentage).toFixed(1),
-          testTitle: test.title,
-          timeTaken
-        }
-      });
+      navigate(`/test-result/${test.id}`);
     } catch (error) {
       console.error('Error submitting test:', error);
       alert('Error submitting test. Please try again.');
     }
   };
 
+  // Keep a ref to the latest handleSubmit so timers/effects created once
+  // (see the countdown effect above) never call a stale closure that's
+  // missing the student's most recent answers.
+  const handleSubmitRef = useRef(handleSubmit);
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  });
+
   // Auto-submit when max violations reached
   useEffect(() => {
     if (proctoring.shouldAutoSubmit) {
-      handleSubmit();
+      handleSubmitRef.current();
     }
   }, [proctoring.shouldAutoSubmit]);
 
@@ -205,7 +213,10 @@ const JeeTestInterface: React.FC = () => {
           </div>
           <div className="flex justify-center">
             <button
-              onClick={() => setShowInstructions(false)}
+              onClick={() => {
+                proctoring.requestFullscreen();
+                setShowInstructions(false);
+              }}
               className="bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 text-lg font-medium"
             >
               Start Test

@@ -131,6 +131,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ isOpen, onToggle })
       {/* Notification Bell Button */}
       <button
         onClick={handleToggle}
+        aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}
+        aria-expanded={isDropdownOpen}
         className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
       >
         <Bell className="h-6 w-6" />

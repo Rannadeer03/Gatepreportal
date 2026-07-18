@@ -60,25 +60,31 @@ interface ResumeData {
 }
 
 class PDFExportService {
-  async exportResume(resumeData: ResumeData, template: string = 'modern'): Promise<void> {
+  async exportResume(
+    resumeData: ResumeData,
+    template: string = 'modern',
+    accentColor: string = '#3b82f6',
+    fontFamily: string = 'Arial, sans-serif'
+  ): Promise<void> {
+    let tempDiv: HTMLDivElement | null = null;
     try {
       // Create a temporary div to render the resume
-      const tempDiv = document.createElement('div');
+      tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '0';
       tempDiv.style.width = '800px';
       tempDiv.style.padding = '40px';
       tempDiv.style.backgroundColor = 'white';
-      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.fontFamily = fontFamily;
       tempDiv.style.fontSize = '12px';
       tempDiv.style.lineHeight = '1.4';
-      
+
       // Render the resume content
-      tempDiv.innerHTML = this.generateResumeHTML(resumeData, template);
-      
+      tempDiv.innerHTML = this.generateResumeHTML(resumeData, template, accentColor, fontFamily);
+
       document.body.appendChild(tempDiv);
-      
+
       // Convert to canvas
       const canvas = await html2canvas(tempDiv, {
         scale: 2,
@@ -86,10 +92,7 @@ class PDFExportService {
         allowTaint: true,
         backgroundColor: '#ffffff'
       });
-      
-      // Remove temporary div
-      document.body.removeChild(tempDiv);
-      
+
       // Create PDF
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -114,23 +117,28 @@ class PDFExportService {
       // Save the PDF
       const fileName = `${resumeData.personalInfo.name || 'resume'}_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
-      
+
     } catch (error) {
       console.error('Error exporting PDF:', error);
       throw new Error('Failed to export PDF');
+    } finally {
+      // Always remove the temp render node, even if html2canvas/jsPDF threw.
+      if (tempDiv && tempDiv.parentNode) {
+        tempDiv.parentNode.removeChild(tempDiv);
+      }
     }
   }
-  
-  private generateResumeHTML(resumeData: ResumeData, template: string): string {
+
+  private generateResumeHTML(resumeData: ResumeData, template: string, accentColor: string = '#3b82f6', fontFamily: string = 'Arial, sans-serif'): string {
     const { personalInfo, experience, education, skills, projects, certifications, languages } = resumeData;
-    
+
     let html = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+      <div style="font-family: ${fontFamily}; max-width: 800px; margin: 0 auto; padding: 20px;">
     `;
-    
+
     // Header
     html += `
-      <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px;">
+      <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid ${accentColor}; padding-bottom: 20px;">
         <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 10px 0; color: #333;">
           ${personalInfo.name || 'Your Name'}
         </h1>
@@ -149,7 +157,7 @@ class PDFExportService {
     if (personalInfo.summary) {
       html += `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 10px 0; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 10px 0; color: #333; border-bottom: 1px solid ${accentColor}; padding-bottom: 5px;">
             Professional Summary
           </h2>
           <p style="margin: 0; line-height: 1.5; color: #555;">
@@ -163,7 +171,7 @@ class PDFExportService {
     if (experience.length > 0) {
       html += `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid ${accentColor}; padding-bottom: 5px;">
             Professional Experience
           </h2>
       `;
@@ -196,7 +204,7 @@ class PDFExportService {
     if (education.length > 0) {
       html += `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid ${accentColor}; padding-bottom: 5px;">
             Education
           </h2>
       `;
@@ -228,7 +236,7 @@ class PDFExportService {
     if (skills.length > 0) {
       html += `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid ${accentColor}; padding-bottom: 5px;">
             Skills
           </h2>
           <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -249,7 +257,7 @@ class PDFExportService {
     if (projects.length > 0) {
       html += `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid ${accentColor}; padding-bottom: 5px;">
             Projects
           </h2>
       `;
@@ -276,7 +284,7 @@ class PDFExportService {
     if (certifications.length > 0) {
       html += `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid ${accentColor}; padding-bottom: 5px;">
             Certifications
           </h2>
       `;
@@ -306,7 +314,7 @@ class PDFExportService {
     if (languages.length > 0) {
       html += `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #333; border-bottom: 1px solid ${accentColor}; padding-bottom: 5px;">
             Languages
           </h2>
           <div style="display: flex; flex-wrap: wrap; gap: 15px;">

@@ -249,11 +249,13 @@ export const useExamProctoring = (config: ProctoringConfig) => {
         // Tab visibility
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // Fullscreen
+        // Fullscreen: listener only. Browsers reject requestFullscreen() unless
+        // it's called from a real user-gesture handler (e.g. a "Start Test"
+        // button click), so it's exposed via the returned `requestFullscreen`
+        // for callers to invoke at that gesture instead of calling it here on
+        // mount, where it would silently fail.
         if (enableFullscreen) {
             document.addEventListener('fullscreenchange', handleFullscreenChange);
-            // Request fullscreen on mount
-            requestFullscreen();
         }
 
         // Copy/Paste prevention

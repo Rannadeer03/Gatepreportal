@@ -24,6 +24,7 @@ import CreateTestPage from './pages/CreateTestPage';
 import JeeTestInterface from './pages/JeeTestInterface';
 import { Register } from './pages/Register';
 import { AuthCallback } from './pages/AuthCallback';
+import ResetPassword from './pages/ResetPassword';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
 import { Profile } from './pages/Profile';
@@ -31,9 +32,9 @@ import Settings from './pages/Settings';
 import TestManagement from './pages/TestManagement';
 import TakeTestPage from './pages/TakeTestPage';
 import TestResults from './pages/TestResults';
+import TestResultPage from './pages/TestResultPage';
 import { StudentMainDashboard } from './pages/StudentMainDashboard';
 import { TeacherMainDashboard } from './pages/TeacherMainDashboard';
-import { GatePreparationDashboard } from './pages/GatePreparationDashboard';
 import StudentAcademicDashboard from './pages/StudentAcademicDashboard';
 import StudentPlacementDashboard from './pages/StudentPlacementDashboard';
 import StudentPlacementResources from './pages/StudentPlacementResources';
@@ -72,6 +73,10 @@ import TeacherClassroomDashboard from './pages/TeacherClassroomDashboard';
 import StudentClassroomDashboard from './pages/StudentClassroomDashboard';
 import TeacherClassView from './pages/TeacherClassView';
 import StudentClassView from './pages/StudentClassView';
+import { RequireRole, RequireAuth } from './components/RequireRole';
+
+const TEACHER_ROLES = ['teacher', 'admin', 'super_admin'] as const;
+const STUDENT_ROLES = ['student', 'admin', 'super_admin'] as const;
 
 
 // Simple loading screen component
@@ -130,69 +135,73 @@ const App: React.FC = () => {
             <Route path="/splash" element={<SplashScreen />} />
             <Route path="/home" element={<Home />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/create-profile" element={<CreateProfile />} />
-            <Route path="/student-dashboard" element={<NewStudentDashboard />} />
-            <Route path="/student-main-dashboard" element={<StudentMainDashboard />} />
-            <Route path="/teacher-dashboard" element={<TeacherDashboard mode="academic" />} />
-            <Route path="/gate-teacher-dashboard" element={<TeacherDashboard mode="gate" />} />
-            <Route path="/teacher-main-dashboard" element={<TeacherMainDashboard />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/super-admin-dashboard" element={<SuperAdminDashboard />} />
-            <Route path="/study-materials" element={<StudyMaterials />} />
-            <Route path="/teacher/assignments" element={<TeacherAssignmentUpload />} />
-            <Route path="/teacher/course-materials" element={<TeacherCourseUpload />} />
-            <Route path="/student/assignments" element={<StudentAssignmentView />} />
-            <Route path="/create-test" element={<CreateTestPage />} />
-            <Route path="/teacher/test-management" element={<TestManagement />} />
-            <Route path="/tests/:testId" element={<JeeTestInterface />} />
-            <Route path="/take-test/:testId" element={<TakeTestPage />} />
+            <Route path="/create-profile" element={<RequireAuth><CreateProfile /></RequireAuth>} />
+            <Route path="/student-dashboard" element={<RequireRole roles={[...STUDENT_ROLES]}><NewStudentDashboard /></RequireRole>} />
+            <Route path="/student-main-dashboard" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentMainDashboard /></RequireRole>} />
+            <Route path="/teacher-dashboard" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherDashboard mode="academic" /></RequireRole>} />
+            <Route path="/gate-teacher-dashboard" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherDashboard mode="gate" /></RequireRole>} />
+            <Route path="/teacher-main-dashboard" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherMainDashboard /></RequireRole>} />
+            <Route path="/admin-dashboard" element={<RequireRole roles={['admin', 'super_admin']}><AdminDashboard /></RequireRole>} />
+            <Route path="/super-admin-dashboard" element={<RequireRole roles={['super_admin']}><SuperAdminDashboard /></RequireRole>} />
+            <Route path="/study-materials" element={<RequireAuth><StudyMaterials /></RequireAuth>} />
+            <Route path="/teacher/assignments" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherAssignmentUpload /></RequireRole>} />
+            <Route path="/teacher/course-materials" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherCourseUpload /></RequireRole>} />
+            <Route path="/student/assignments" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentAssignmentView /></RequireRole>} />
+            <Route path="/create-test" element={<RequireRole roles={[...TEACHER_ROLES]}><CreateTestPage /></RequireRole>} />
+            <Route path="/teacher/test-management" element={<RequireRole roles={[...TEACHER_ROLES]}><TestManagement /></RequireRole>} />
+            <Route path="/tests/:testId" element={<RequireRole roles={[...STUDENT_ROLES]}><JeeTestInterface /></RequireRole>} />
+            <Route path="/take-test/:testId" element={<RequireRole roles={[...STUDENT_ROLES]}><TakeTestPage /></RequireRole>} />
+            <Route path="/test-result/:testId" element={<RequireRole roles={[...STUDENT_ROLES]}><TestResultPage /></RequireRole>} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/teacher/test-results" element={<TestResults />} />
-            <Route path="/gate-preparation/tests" element={<GatePreparationDashboard />} />
-            <Route path="/gate-preparation/materials" element={<GatePreparationDashboard />} />
-            <Route path="/gate-preparation/schedule" element={<GatePreparationDashboard />} />
-            <Route path="/gate-preparation/progress" element={<GatePreparationDashboard />} />
-            <Route path="/student-academic-dashboard" element={<StudentAcademicDashboard />} />
-            <Route path="/student-placement-dashboard" element={<StudentPlacementDashboard />} />
-            <Route path="/student/placement-resources" element={<StudentPlacementResources />} />
-            <Route path="/student/video-tutorials" element={<PlacementVideoTutorials />} />
-            <Route path="/student-test-results" element={<StudentTestResults />} />
-            <Route path="/teacher/assignment-review" element={<AssignmentReview />} />
-            <Route path="/teacher-placement-dashboard" element={<TeacherPlacementDashboard />} />
-            <Route path="/teacher/pyq-questions" element={<TeacherPYQQuestions />} />
-            <Route path="/academic/teacher-dashboard" element={<AcademicTeacherDashboard />} />
-            <Route path="/academic/teacher-main-dashboard" element={<AcademicTeacherMainDashboard />} />
-            <Route path="/academic/teacher/test-management" element={<AcademicTestManagement />} />
-            <Route path="/academic/teacher/test-results" element={<AcademicTestResults />} />
-            <Route path="/academic/teacher/assignments" element={<AcademicTeacherAssignmentUpload />} />
-            <Route path="/academic/teacher/course-materials" element={<AcademicTeacherCourseUpload />} />
-            <Route path="/academic/teacher/assignment-review" element={<AcademicTeacherAssignmentList />} />
-            <Route path="/academic/create-test" element={<AcademicCreateTestPage />} />
-            <Route path="/student/academic-tests" element={<StudentAcademicTestList />} />
-            <Route path="/student/academic-study-materials" element={<StudentAcademicStudyMaterials />} />
-            <Route path="/student/academic-assignments" element={<StudentAcademicAssignments />} />
-            <Route path="/student/academic-test-results" element={<StudentAcademicTestResults />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+            <Route path="/teacher/test-results" element={<RequireRole roles={[...TEACHER_ROLES]}><TestResults /></RequireRole>} />
+            <Route path="/teacher/test-results/:testId" element={<RequireRole roles={[...TEACHER_ROLES]}><TestResults /></RequireRole>} />
+            <Route path="/gate-preparation/tests" element={<RequireRole roles={[...STUDENT_ROLES]}><NewStudentDashboard /></RequireRole>} />
+            <Route path="/gate-preparation/materials" element={<RequireRole roles={[...STUDENT_ROLES]}><NewStudentDashboard /></RequireRole>} />
+            <Route path="/gate-preparation/schedule" element={<RequireRole roles={[...STUDENT_ROLES]}><NewStudentDashboard /></RequireRole>} />
+            <Route path="/gate-preparation/progress" element={<RequireRole roles={[...STUDENT_ROLES]}><NewStudentDashboard /></RequireRole>} />
+            <Route path="/student-academic-dashboard" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentAcademicDashboard /></RequireRole>} />
+            <Route path="/student-placement-dashboard" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentPlacementDashboard /></RequireRole>} />
+            <Route path="/student/placement-resources" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentPlacementResources /></RequireRole>} />
+            <Route path="/student/video-tutorials" element={<RequireRole roles={[...STUDENT_ROLES]}><PlacementVideoTutorials /></RequireRole>} />
+            <Route path="/student-test-results" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentTestResults /></RequireRole>} />
+            <Route path="/teacher/assignment-review" element={<RequireRole roles={[...TEACHER_ROLES]}><AssignmentReview /></RequireRole>} />
+            <Route path="/teacher-placement-dashboard" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherPlacementDashboard /></RequireRole>} />
+            <Route path="/teacher/pyq-questions" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherPYQQuestions /></RequireRole>} />
+            <Route path="/academic/teacher-dashboard" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTeacherDashboard /></RequireRole>} />
+            <Route path="/academic/teacher-main-dashboard" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTeacherMainDashboard /></RequireRole>} />
+            <Route path="/academic/teacher/test-management" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTestManagement /></RequireRole>} />
+            <Route path="/academic/teacher/test-results" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTestResults /></RequireRole>} />
+            <Route path="/academic/teacher/test-results/:testId" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTestResults /></RequireRole>} />
+            <Route path="/academic/teacher/assignments" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTeacherAssignmentUpload /></RequireRole>} />
+            <Route path="/academic/teacher/course-materials" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTeacherCourseUpload /></RequireRole>} />
+            <Route path="/academic/teacher/assignment-review" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicTeacherAssignmentList /></RequireRole>} />
+            <Route path="/academic/create-test" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicCreateTestPage /></RequireRole>} />
+            <Route path="/student/academic-tests" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentAcademicTestList /></RequireRole>} />
+            <Route path="/student/academic-study-materials" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentAcademicStudyMaterials /></RequireRole>} />
+            <Route path="/student/academic-assignments" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentAcademicAssignments /></RequireRole>} />
+            <Route path="/student/academic-test-results" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentAcademicTestResults /></RequireRole>} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/support" element={<Support />} />
             <Route path="/tutorials" element={<Tutorials />} />
-            <Route path="/student/academic-video-tutorials" element={<StudentAcademicVideoTutorials />} />
-            <Route path="/academic/teacher/video-tutorials" element={<AcademicVideoTutorials />} />
-            <Route path="/gate/video-tutorials" element={<GateVideoTutorials />} />
-            <Route path="/student/progress-tracker" element={<AcademicProgressTracker />} />
-            <Route path="/gate/progress" element={<GateProgressTracker />} />
-            <Route path="/student/time-management" element={<TimeManagement />} />
-            <Route path="/student/mentorship" element={<Mentorship />} />
-            <Route path="/gate/mentorship" element={<GateMentorship />} />
-            <Route path="/gate/schedule" element={<GateSchedule />} />
-            <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
-            <Route path="/resume-builder" element={<ResumeBuilder />} />
-            <Route path="/teacher-classroom-dashboard" element={<TeacherClassroomDashboard />} />
-            <Route path="/student-classroom-dashboard" element={<StudentClassroomDashboard />} />
-            <Route path="/teacher-classroom/:classId" element={<TeacherClassView />} />
-            <Route path="/student-classroom/:classId" element={<StudentClassView />} />
+            <Route path="/student/academic-video-tutorials" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentAcademicVideoTutorials /></RequireRole>} />
+            <Route path="/academic/teacher/video-tutorials" element={<RequireRole roles={[...TEACHER_ROLES]}><AcademicVideoTutorials /></RequireRole>} />
+            <Route path="/gate/video-tutorials" element={<RequireRole roles={[...STUDENT_ROLES]}><GateVideoTutorials /></RequireRole>} />
+            <Route path="/student/progress-tracker" element={<RequireRole roles={[...STUDENT_ROLES]}><AcademicProgressTracker /></RequireRole>} />
+            <Route path="/gate/progress" element={<RequireRole roles={[...STUDENT_ROLES]}><GateProgressTracker /></RequireRole>} />
+            <Route path="/student/time-management" element={<RequireRole roles={[...STUDENT_ROLES]}><TimeManagement /></RequireRole>} />
+            <Route path="/student/mentorship" element={<RequireRole roles={[...STUDENT_ROLES]}><Mentorship /></RequireRole>} />
+            <Route path="/gate/mentorship" element={<RequireRole roles={[...STUDENT_ROLES]}><GateMentorship /></RequireRole>} />
+            <Route path="/gate/schedule" element={<RequireRole roles={[...STUDENT_ROLES]}><GateSchedule /></RequireRole>} />
+            <Route path="/performance-dashboard" element={<RequireAuth><PerformanceDashboard /></RequireAuth>} />
+            <Route path="/resume-builder" element={<RequireAuth><ResumeBuilder /></RequireAuth>} />
+            <Route path="/teacher-classroom-dashboard" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherClassroomDashboard /></RequireRole>} />
+            <Route path="/student-classroom-dashboard" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentClassroomDashboard /></RequireRole>} />
+            <Route path="/teacher-classroom/:classId" element={<RequireRole roles={[...TEACHER_ROLES]}><TeacherClassView /></RequireRole>} />
+            <Route path="/student-classroom/:classId" element={<RequireRole roles={[...STUDENT_ROLES]}><StudentClassView /></RequireRole>} />
 
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

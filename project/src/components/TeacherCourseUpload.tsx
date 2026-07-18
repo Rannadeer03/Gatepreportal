@@ -34,15 +34,10 @@ const TeacherCourseUpload: React.FC<TeacherCourseUploadProps> = ({ mode = 'gate'
         if (dbSubjects && dbSubjects.length > 0) {
           setSubjects(dbSubjects);
 
-          // Fetch materials for each subject
-          const allMaterials: CourseMaterial[] = [];
-          for (const subject of dbSubjects) {
-            const subjectMaterials = await api.getCourseMaterialsBySubject(
-              subject.id,
-              mode
-            );
-            allMaterials.push(...subjectMaterials);
-          }
+          const allMaterials = await api.getCourseMaterialsBySubjects(
+            dbSubjects.map((s) => s.id),
+            mode
+          );
           setMaterials(allMaterials);
           setMessage('Data loaded successfully');
         } else {

@@ -26,14 +26,10 @@ const AcademicTeacherCourseUpload: React.FC = () => {
         const dbSubjects = await api.getSubjects();
         if (dbSubjects && dbSubjects.length > 0) {
           setSubjects(dbSubjects);
-          const allMaterials: CourseMaterial[] = [];
-          for (const subject of dbSubjects) {
-            const subjectMaterials = await api.getCourseMaterialsBySubject(
-              subject.id,
-              'academic'
-            );
-            allMaterials.push(...subjectMaterials);
-          }
+          const allMaterials = await api.getCourseMaterialsBySubjects(
+            dbSubjects.map((s) => s.id),
+            'academic'
+          );
           setMaterials(allMaterials);
           setMessage('Data loaded successfully');
         } else {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, getSupabaseAdmin } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { loggingService } from '../services/loggingService';
 
@@ -28,7 +28,6 @@ interface Profile {
   approved_by?: string;
   approved_at?: string;
   rejection_reason?: string;
-  temp_password?: string;
 }
 
 interface AuthState {
@@ -315,11 +314,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (profileError) {
         console.error('Profile registration error:', profileError);
-        // Clean up the auth user if profile creation fails
-        const supabaseAdmin = getSupabaseAdmin();
-        if (supabaseAdmin) {
-          await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        }
+        // Clean up the just-created auth user if profile creation fails.
+        // Routed through the admin-actions edge function (server-side only,
+        // service-role key never touches the client) which only allows a
+        // caller to delete their own just-created account here.
+        await supabase.functions.invoke('admin-actions', {
+          body: { action: 'cleanupOwnRegistration', userId: authData.user.id },
+        });
         throw new Error('Failed to create user profile. Please try again.');
       }
 

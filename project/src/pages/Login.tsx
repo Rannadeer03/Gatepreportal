@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, X, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { supabase } from '../lib/supabase';
+import { validateEmail } from '../utils/validation';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -73,18 +75,22 @@ export const Login: React.FC = () => {
     setForgotPasswordMessage(null);
     setIsResettingPassword(true);
 
-    if (!forgotPasswordEmail) {
-      setForgotPasswordMessage('Please enter your email address');
+    if (!forgotPasswordEmail || !validateEmail(forgotPasswordEmail)) {
+      setForgotPasswordMessage('Please enter a valid email address');
       setIsResettingPassword(false);
       return;
     }
 
     try {
-      // Here you would typically call your auth service's forgot password method
-      // For now, we'll simulate the process
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
 
-      setForgotPasswordMessage('Password reset link has been sent to your email address. Please check your inbox and follow the instructions.');
+      if (error) throw error;
+
+      // Always show the same message regardless of whether the account
+      // exists, so this form can't be used to enumerate registered emails.
+      setForgotPasswordMessage('If an account exists for that email address, a password reset link has been sent. Please check your inbox.');
       setForgotPasswordEmail('');
     } catch (error: unknown) {
       setForgotPasswordMessage(error instanceof Error ? error.message : 'Failed to send reset email. Please try again.');

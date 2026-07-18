@@ -38,6 +38,7 @@ const TakeTestPage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
 
   // Exam Proctoring System
   const proctoring = useExamProctoring({
@@ -191,21 +192,19 @@ const TakeTestPage: React.FC = () => {
   }, [timeLeft]);
 
   const handleAnswerChange = (questionId: string, answer: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: answer
-    }));
-
-    // Auto-save progress
-    saveProgress();
+    setAnswers(prev => {
+      const updated = { ...prev, [questionId]: answer };
+      saveProgress(updated);
+      return updated;
+    });
   };
 
-  const saveProgress = async () => {
+  const saveProgress = async (updatedAnswers: Record<string, string>) => {
     try {
       const { error } = await supabase
         .from('academic_test_results')
         .update({
-          answers,
+          answers: updatedAnswers,
           updated_at: new Date().toISOString()
         })
         .eq('test_id', testId)
@@ -251,7 +250,7 @@ const TakeTestPage: React.FC = () => {
           wrong_answers: wrongAnswers,
           unattempted,
           submitted_at: new Date().toISOString(),
-          time_taken: test?.time_limit || test?.duration || 0 - timeLeft,
+          time_taken: (test?.time_limit || test?.duration || 0) - timeLeft,
           answers
         })
         .eq('test_id', testId)
@@ -289,6 +288,30 @@ const TakeTestPage: React.FC = () => {
     }
   }, [proctoring.shouldAutoSubmit]);
 
+  if (error && !test) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md flex">
+              <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Couldn't load this test</h3>
+                <div className="mt-2 text-sm text-red-700">{error}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/student-main-dashboard')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              Back to dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!test || !questions.length) {
     return (
       <div className="min-h-screen bg-gray-100 py-8">
@@ -299,6 +322,32 @@ const TakeTestPage: React.FC = () => {
               <p className="mt-4 text-gray-600">Loading test...</p>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fullscreen enforcement only works from a real user-gesture handler, so
+  // gate entry to the exam behind a click rather than requesting it on mount
+  // (where browsers silently reject it).
+  if (!hasStarted) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center py-8">
+        <div className="max-w-lg mx-auto px-4 text-center bg-white rounded-lg shadow-md p-8">
+          <Shield className="h-10 w-10 text-indigo-600 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-gray-900 mb-2">{test.title}</h1>
+          <p className="text-gray-600 mb-6">
+            This exam is proctored: it runs in fullscreen and monitors tab switches, copy/paste, and right-click. Do not exit fullscreen during the test.
+          </p>
+          <button
+            onClick={() => {
+              proctoring.requestFullscreen();
+              setHasStarted(true);
+            }}
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Begin Test
+          </button>
         </div>
       </div>
     );
